@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MdiShell } from './components/MdiShell';
+import { LoginScreen } from './components/LoginScreen';
 import { PosBillingScreen } from './components/PosBillingScreen';
 import { SettingsModal, AppSettings } from './components/SettingsModal';
 import {
@@ -29,6 +30,14 @@ const DEFAULT_SETTINGS: AppSettings = {
 };
 
 export const App: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<{ username: string; role: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem('barakah_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [activeModule, setActiveModule] = useState<string>('sales_billing');
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [appSettings, setAppSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
@@ -150,6 +159,32 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleLogOff = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('barakah_user');
+    } catch {}
+    setActiveModule('sales_billing');
+  };
+
+  // If not logged in, show exact Slide 4 / image4.jpeg Login Screen
+  if (!currentUser) {
+    return (
+      <LoginScreen
+        onLogin={(user) => {
+          setCurrentUser(user);
+          try {
+            localStorage.setItem('barakah_user', JSON.stringify(user));
+          } catch {}
+          setActiveModule('sales_billing');
+          setChildMinimized(false);
+        }}
+        isEnglish={isEnglish}
+        onToggleLanguage={handleToggleLanguage}
+      />
+    );
+  }
+
   return (
     <MdiShell
       activeModule={activeModule}
@@ -159,6 +194,8 @@ export const App: React.FC = () => {
       onRestoreChild={() => setChildMinimized(false)}
       onCloseChild={() => { setChildMinimized(false); setActiveModule('none'); }}
       isEnglish={isEnglish}
+      currentUser={currentUser}
+      onLogOff={handleLogOff}
     >
       {renderModuleContent()}
 

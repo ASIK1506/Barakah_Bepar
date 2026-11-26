@@ -13,6 +13,8 @@ interface MdiShellProps {
   onRestoreChild?: () => void;
   onCloseChild?: () => void;
   isEnglish?: boolean;
+  currentUser?: { username: string; role: string } | null;
+  onLogOff?: () => void;
 }
 
 export const MdiShell: React.FC<MdiShellProps> = ({
@@ -23,7 +25,9 @@ export const MdiShell: React.FC<MdiShellProps> = ({
   isChildMinimized,
   onRestoreChild,
   onCloseChild,
-  isEnglish = true
+  isEnglish = true,
+  currentUser,
+  onLogOff
 }) => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [appExited, setAppExited] = useState(false);
@@ -98,7 +102,14 @@ export const MdiShell: React.FC<MdiShellProps> = ({
       <div className="win-parent-titlebar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <img src={barakahIcon} alt="Barakah Bepaar" style={{ width: 14, height: 14, objectFit: 'contain', background: '#FFF', borderRadius: 2 }} />
-          <span style={{ fontSize: 11 }}>Barakah Bepaar - Retail Management Software [GST Version] {APP_VERSION_TAG}</span>
+          <span style={{ fontSize: 11 }}>
+            Barakah Bepaar - Retail Management Software [GST Version] {APP_VERSION_TAG}
+            {currentUser && (
+              <span style={{ marginLeft: 8, padding: '1px 6px', background: 'rgba(255,255,255,0.2)', borderRadius: 2, fontSize: 10 }}>
+                {isEnglish ? `User: ${currentUser.username} (${currentUser.role})` : `பயனர்: ${currentUser.username}`}
+              </span>
+            )}
+          </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <button className="win-control-btn" title="Minimize Window" onClick={handleMinimizeApp}>_</button>
@@ -121,7 +132,12 @@ export const MdiShell: React.FC<MdiShellProps> = ({
               <div style={{ height: 1, background: '#A0A0A0', margin: '2px 0' }} />
               <div className="win-dropdown-item" onClick={() => { setOpenMenu(null); onOpenSettings(); }}>{isEnglish ? 'Hardware & Weighing Scale...' : 'எடை இயந்திரம் & வன்பொருள்...'}</div>
               <div style={{ height: 1, background: '#A0A0A0', margin: '2px 0' }} />
-              <div className="win-dropdown-item" onClick={handleCloseApp}>{isEnglish ? 'Log Off / Exit' : 'வெளியேறு'}</div>
+              <div className="win-dropdown-item" onClick={() => { setOpenMenu(null); onLogOff?.(); }}>
+                {isEnglish ? 'Log Off' : 'பயனர் வெளியேறு (Log Off)'}
+              </div>
+              <div className="win-dropdown-item" onClick={handleCloseApp}>
+                {isEnglish ? 'Exit Application' : 'மூடு (Exit)'}
+              </div>
             </div>
           )}
         </div>
