@@ -1,0 +1,565 @@
+/* ==========================================================================
+   Barakah Bepaar / Vanigam 4.0 Pixel-Identical Windows Desktop Theme
+   Exact Color Codes, Bevels, 22px Rows, Yellow Input & Classic MDI Window
+   ========================================================================== */
+
+:root {
+  --win-bg: #ECE9D8;
+  --win-border-light: #FFFFFF;
+  --win-border-mid: #D4D0C8;
+  --win-border-dark: #808080;
+  --win-border-darker: #404040;
+  --win-titlebar-active: #0A246A;
+  --win-titlebar-active-end: #A6CAF0;
+  --win-titlebar-mdi-active: linear-gradient(90deg, #0A246A 0%, #A6CAF0 100%);
+  --win-titlebar-mdi-child: linear-gradient(90deg, #1084D0 0%, #B5D2EE 100%);
+  --win-yellow-barcode: #FFFF80;
+  --win-pink-row: #FFF0F5;
+  --win-blue-select: #316AC5;
+  --win-crimson: #B22222;
+  --win-stock-red: #CC0000;
+  --win-font: 'Tahoma', 'Segoe UI', 'Noto Sans Tamil', sans-serif;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: #557E9E; /* Windows MDI desktop wallpaper color */
+  font-family: var(--win-font);
+  font-size: 11px;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 3D Bevel Utility Classes */
+.bevel-raised {
+  border-top: 1.5px solid var(--win-border-light);
+  border-left: 1.5px solid var(--win-border-light);
+  border-right: 1.5px solid var(--win-border-darker);
+  border-bottom: 1.5px solid var(--win-border-darker);
+  background-color: var(--win-bg);
+}
+
+.bevel-sunken {
+  border-top: 1.5px solid var(--win-border-dark);
+  border-left: 1.5px solid var(--win-border-dark);
+  border-right: 1.5px solid var(--win-border-light);
+  border-bottom: 1.5px solid var(--win-border-light);
+  background-color: #FFFFFF;
+}
+
+/* Outer MDI Parent Window Bar */
+.win-parent-titlebar {
+  height: 22px;
+  background: linear-gradient(90deg, #0A246A 0%, #3A6EA5 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  font-family: var(--win-font);
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* Classic Windows Menu Bar */
+.win-menubar {
+  height: 20px;
+  background-color: var(--win-bg);
+  border-bottom: 1px solid var(--win-border-dark);
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  font-size: 11px;
+}
+
+.win-menubar-item {
+  padding: 2px 7px;
+  cursor: pointer;
+  position: relative;
+}
+
+.win-menubar-item:hover, .win-menubar-item.open {
+  background-color: #316AC5;
+  color: #FFFFFF;
+}
+
+.win-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--win-bg);
+  border: 1px solid var(--win-border-dark);
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  z-index: 10000;
+  min-width: 170px;
+  padding: 2px 0;
+  color: #000;
+}
+
+.win-dropdown-item {
+  padding: 4px 16px;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.win-dropdown-item:hover {
+  background: #316AC5;
+  color: #FFF;
+}
+
+/* Inner MDI Child Window */
+.win-child-window {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--win-bg);
+  border-top: 2px solid var(--win-border-light);
+  border-left: 2px solid var(--win-border-light);
+  border-right: 2px solid var(--win-border-darker);
+  border-bottom: 2px solid var(--win-border-darker);
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+  width: calc(100vw - 12px);
+  height: calc(100vh - 52px);
+  margin: 4px auto 0 auto;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 100;
+}
+
+.win-child-window.maximized {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.win-child-window.restored {
+  width: 92%;
+  height: 90%;
+  margin: auto;
+}
+
+/* Child Window Titlebar */
+.win-child-titlebar {
+  height: 20px;
+  background: linear-gradient(90deg, #1084D0 0%, #B5D2EE 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.win-control-btn {
+  width: 16px;
+  height: 14px;
+  background: var(--win-bg);
+  border: 1px outset var(--win-border-light);
+  font-size: 9px;
+  line-height: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
+  padding: 0;
+  color: #000;
+}
+
+.win-control-btn:active {
+  border-style: inset;
+}
+
+/* The 5 Iconic Top-Right Action Buttons Box */
+.action-buttons-box {
+  display: flex;
+  background: #FFFFFF;
+  border: 1px solid var(--win-border-dark);
+  padding: 1px;
+  gap: 1px;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: #F8F8F8;
+  border: 1px outset #FFFFFF;
+  cursor: pointer;
+  padding: 2px 0;
+  box-sizing: border-box;
+}
+
+.action-btn:hover {
+  background: #E8EEF7;
+  border: 1px solid #316AC5;
+}
+
+.action-btn:active {
+  background: #D8E4F2;
+  border: 1px inset #808080;
+}
+
+.action-btn-label-ta {
+  font-size: 10.5px;
+  font-family: 'Noto Sans Tamil', sans-serif;
+  color: #6B21A8;
+  font-weight: bold;
+  line-height: 1.2;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.action-btn-label-en {
+  font-size: 10.5px;
+  font-family: Tahoma, 'Segoe UI', sans-serif;
+  color: #000080;
+  font-weight: bold;
+  line-height: 1.2;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* Classic Windows Tab Header */
+.win-tabs-container {
+  display: flex;
+  align-items: flex-end;
+  padding-left: 4px;
+  border-bottom: 1px solid var(--win-border-dark);
+}
+
+.win-tab {
+  padding: 3px 12px;
+  background: #DCD8CA;
+  border-top: 1.5px solid var(--win-border-light);
+  border-left: 1.5px solid var(--win-border-light);
+  border-right: 1.5px solid var(--win-border-darker);
+  border-bottom: none;
+  font-weight: bold;
+  font-size: 11px;
+  cursor: pointer;
+  margin-right: 2px;
+  margin-bottom: -1px;
+}
+
+.win-tab.active {
+  background: var(--win-bg);
+  padding: 4px 14px 4px 14px;
+  border-top: 2px solid var(--win-border-light);
+  border-left: 2px solid var(--win-border-light);
+  border-right: 2px solid var(--win-border-darker);
+  border-bottom: 1px solid var(--win-bg);
+  z-index: 10;
+}
+
+/* Classic Input Fields */
+.win-input-classic {
+  font-family: var(--win-font);
+  font-size: 11px;
+  height: 20px;
+  padding: 1px 3px;
+  box-sizing: border-box;
+  background-color: #FFFFFF;
+  border-top: 1.5px solid var(--win-border-dark);
+  border-left: 1.5px solid var(--win-border-dark);
+  border-right: 1.5px solid var(--win-border-light);
+  border-bottom: 1.5px solid var(--win-border-light);
+  outline: none;
+  color: #000000;
+}
+
+.win-input-classic:focus {
+  background-color: #FFFFFF;
+}
+
+/* Active Yellow Barcode Input (Pixel-Identical Vanigam #FFFF80) */
+.win-input-barcode-yellow {
+  font-family: var(--win-font);
+  font-size: 12px;
+  font-weight: bold;
+  height: 20px;
+  padding: 1px 4px;
+  box-sizing: border-box;
+  background-color: var(--win-yellow-barcode) !important;
+  border-top: 1.5px solid var(--win-border-dark);
+  border-left: 1.5px solid var(--win-border-dark);
+  border-right: 1.5px solid var(--win-border-light);
+  border-bottom: 1.5px solid var(--win-border-light);
+  outline: none;
+  color: #000000;
+}
+
+/* Classic Button */
+.win-btn-classic {
+  font-family: var(--win-font);
+  font-size: 11px;
+  height: 21px;
+  padding: 1px 6px;
+  background-color: var(--win-bg);
+  border-top: 1.5px solid var(--win-border-light);
+  border-left: 1.5px solid var(--win-border-light);
+  border-right: 1.5px solid var(--win-border-darker);
+  border-bottom: 1.5px solid var(--win-border-darker);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  color: #000000;
+}
+
+.win-btn-classic:hover {
+  background-color: #F0ECE0;
+}
+
+.win-btn-classic:active {
+  border-top: 1.5px solid var(--win-border-darker);
+  border-left: 1.5px solid var(--win-border-darker);
+  border-right: 1.5px solid var(--win-border-light);
+  border-bottom: 1.5px solid var(--win-border-light);
+  padding: 2px 5px 0 7px;
+}
+
+/* Navigation Buttons |< << >> >| (Pink-tinted classic Vanigam buttons) */
+.nav-btn-group {
+  display: flex;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.nav-btn-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nav-btn {
+  width: 28px;
+  height: 20px;
+  background: #F7D4D4;
+  border-top: 1px solid #FFF;
+  border-left: 1px solid #FFF;
+  border-right: 1px solid #808080;
+  border-bottom: 1px solid #808080;
+  font-size: 10px;
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.nav-btn:hover {
+  background: #F4C0C0;
+}
+
+.nav-btn:active {
+  border-top: 1px solid #808080;
+  border-left: 1px solid #808080;
+  border-right: 1px solid #FFF;
+  border-bottom: 1px solid #FFF;
+}
+
+.nav-btn-subtext {
+  font-size: 9px;
+  color: #CC0000;
+  font-weight: bold;
+  line-height: 1.1;
+  margin-top: 1px;
+}
+
+/* Dense 22px Grid */
+.vanigam-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--win-font);
+  font-size: 11px;
+  table-layout: fixed;
+}
+
+.vanigam-grid th {
+  background-color: #ECE9D8;
+  border-top: 1px solid #FFFFFF;
+  border-left: 1px solid #FFFFFF;
+  border-right: 1px solid #808080;
+  border-bottom: 1px solid #808080;
+  padding: 2px 4px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #000000;
+  text-align: left;
+  user-select: none;
+  height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vanigam-grid td {
+  padding: 1px 4px;
+  height: 21px;
+  line-height: 19px;
+  box-sizing: border-box;
+  border-right: 1px solid #B8A0B8;
+  border-bottom: 1px solid #B8A0B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vanigam-grid tr:nth-child(even) td {
+  background-color: #FFFFFF;
+}
+
+.vanigam-grid tr:nth-child(odd) td {
+  background-color: #FCE8FA; /* Soft classic Vanigam pink tint */
+}
+
+.vanigam-grid tr.selected td {
+  background-color: #000080;
+  color: #FFFFFF !important;
+}
+
+.vanigam-grid tr.selected td span {
+  color: #FFFFFF !important;
+}
+
+/* Summary Strip Cell (Slide 30 / 1000x1000.webp layout: label above sunken white box) */
+.pos-summary-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pos-summary-label {
+  font-size: 10px;
+  font-weight: bold;
+  color: #000080;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.pos-summary-value {
+  background: #FFFFFF;
+  border-top: 1px solid #808080;
+  border-left: 1px solid #808080;
+  border-right: 1px solid #FFFFFF;
+  border-bottom: 1px solid #FFFFFF;
+  height: 17px;
+  line-height: 16px;
+  padding: 0 3px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #000000;
+}
+
+/* Vertical S A L E Ribbon */
+.sale-vertical-ribbon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  font-weight: bold;
+  font-size: 15px;
+  color: #CC0000;
+  letter-spacing: 2px;
+  line-height: 1.35;
+  user-select: none;
+}
+
+/* Autocomplete Overlay (Slide 31) */
+.autocomplete-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 99999;
+  background: #FFF;
+  border: 2px solid #000080;
+  box-shadow: 2px 3px 8px rgba(0,0,0,0.4);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.autocomplete-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: var(--win-font);
+}
+
+.autocomplete-table th {
+  background: #E0E0E0;
+  border: 1px solid #A0A0A0;
+  padding: 2px 4px;
+  font-weight: bold;
+  text-align: left;
+}
+
+.autocomplete-table td {
+  padding: 2px 4px;
+  border: 1px solid #DCDCDC;
+  height: 20px;
+}
+
+.autocomplete-table tr:nth-child(even) td {
+  background: #FFFFFF;
+}
+
+.autocomplete-table tr:nth-child(odd) td {
+  background: #FFE4E1; /* Light misty rose / pink */
+}
+
+.autocomplete-table tr.selected td {
+  background: #000080 !important;
+  color: #FFFFFF !important;
+}
+
+/* Modals */
+.win-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+}
+
+.win-modal-window {
+  background: var(--win-bg);
+  border-top: 2px solid var(--win-border-light);
+  border-left: 2px solid var(--win-border-light);
+  border-right: 2px solid var(--win-border-darker);
+  border-bottom: 2px solid var(--win-border-darker);
+  box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+  box-sizing: border-box;
+}
+
+.win-modal-titlebar {
+  height: 22px;
+  background: linear-gradient(90deg, #0A246A 0%, #A6CAF0 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  font-weight: bold;
+  font-size: 11.5px;
+}

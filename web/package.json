@@ -1,0 +1,32 @@
+{
+  "name": "barakah-bepaar-retail",
+  "private": true,
+  "version": "1.2.1",
+  "description": "Barakah Bepaar - Retail Management Software [GST Version]",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "electron:start": "node electron/launch.cjs",
+    "electron:dev": "node electron/launch.cjs --dev",
+    "dist:win": "tsc && vite build && electron-builder --win",
+    "dist:installer": "tsc && vite build && electron-builder --win nsis",
+    "dist:portable": "tsc && vite build && electron-builder --win portable"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "lucide-react": "^0.475.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.0"
+  }
+}

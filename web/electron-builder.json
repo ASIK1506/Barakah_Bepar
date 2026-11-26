@@ -1,0 +1,35 @@
+{
+  "appId": "com.barakahbepar.retail",
+  "productName": "Barakah Bepaar",
+  "copyright": "Copyright © 2026 Barakah Bepaar Retail Systems",
+  "asar": true,
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "build/**/*",
+    "package.json"
+  ],
+  "afterPack": "electron/afterPack.cjs",
+  "win": {
+    "target": [
+      "nsis",
+      "portable"
+    ],
+    "icon": "build/icon.ico",
+    "signAndEditExecutable": false
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "deleteAppDataOnUninstall": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "artifactName": "BarakahBepaar-Setup-${version}.${ext}"
+  },
+  "portable": {
+    "artifactName": "BarakahBepaar-Portable-${version}.${ext}"
+  }
+}

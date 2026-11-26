@@ -1,0 +1,607 @@
+[
+  {
+    "slide": 1,
+    "title": "| RETAIL SOFTWARE DEMO",
+    "mainImage": "image3.jpeg",
+    "allImages": [
+      "image3.jpeg",
+      "image2.png"
+    ]
+  },
+  {
+    "slide": 2,
+    "title": "",
+    "mainImage": "image4.jpeg",
+    "allImages": [
+      "image5.png",
+      "image4.jpeg",
+      "image6.png"
+    ]
+  },
+  {
+    "slide": 3,
+    "title": "FILE",
+    "mainImage": null,
+    "allImages": []
+  },
+  {
+    "slide": 4,
+    "title": "",
+    "mainImage": "image7.jpeg",
+    "allImages": [
+      "image5.png",
+      "image7.jpeg",
+      "image6.png"
+    ]
+  },
+  {
+    "slide": 5,
+    "title": "",
+    "mainImage": "image8.jpeg",
+    "allImages": [
+      "image5.png",
+      "image8.jpeg"
+    ]
+  },
+  {
+    "slide": 6,
+    "title": "",
+    "mainImage": "image9.jpeg",
+    "allImages": [
+      "image5.png",
+      "image9.jpeg"
+    ]
+  },
+  {
+    "slide": 7,
+    "title": "",
+    "mainImage": "image10.jpeg",
+    "allImages": [
+      "image5.png",
+      "image10.jpeg"
+    ]
+  },
+  {
+    "slide": 8,
+    "title": "`",
+    "mainImage": "image11.jpeg",
+    "allImages": [
+      "image5.png",
+      "image11.jpeg"
+    ]
+  },
+  {
+    "slide": 9,
+    "title": "",
+    "mainImage": "image12.jpeg",
+    "allImages": [
+      "image12.jpeg"
+    ]
+  },
+  {
+    "slide": 10,
+    "title": "MASTERS",
+    "mainImage": null,
+    "allImages": []
+  },
+  {
+    "slide": 11,
+    "title": "",
+    "mainImage": "image13.jpeg",
+    "allImages": [
+      "image5.png",
+      "image13.jpeg"
+    ]
+  },
+  {
+    "slide": 12,
+    "title": "",
+    "mainImage": "image14.jpeg",
+    "allImages": [
+      "image5.png",
+      "image14.jpeg"
+    ]
+  },
+  {
+    "slide": 13,
+    "title": "",
+    "mainImage": "image15.jpeg",
+    "allImages": [
+      "image5.png",
+      "image15.jpeg"
+    ]
+  },
+  {
+    "slide": 14,
+    "title": "",
+    "mainImage": "image16.jpeg",
+    "allImages": [
+      "image16.jpeg"
+    ]
+  },
+  {
+    "slide": 15,
+    "title": "",
+    "mainImage": "image17.jpeg",
+    "allImages": [
+      "image17.jpeg"
+    ]
+  },
+  {
+    "slide": 16,
+    "title": "",
+    "mainImage": "image18.jpeg",
+    "allImages": [
+      "image18.jpeg"
+    ]
+  },
+  {
+    "slide": 17,
+    "title": "",
+    "mainImage": "image19.jpeg",
+    "allImages": [
+      "image19.jpeg"
+    ]
+  },
+  {
+    "slide": 18,
+    "title": "",
+    "mainImage": "image20.jpeg",
+    "allImages": [
+      "image20.jpeg"
+    ]
+  },
+  {
+    "slide": 19,
+    "title": "",
+    "mainImage": "image21.jpeg",
+    "allImages": [
+      "image21.jpeg"
+    ]
+  },
+  {
+    "slide": 20,
+    "title": "",
+    "mainImage": "image22.jpeg",
+    "allImages": [
+      "image22.jpeg"
+    ]
+  },
+  {
+    "slide": 21,
+    "title": "",
+    "mainImage": "image23.jpeg",
+    "allImages": [
+      "image23.jpeg"
+    ]
+  },
+  {
+    "slide": 22,
+    "title": "",
+    "mainImage": "image24.jpeg",
+    "allImages": [
+      "image5.png",
+      "image24.jpeg"
+    ]
+  },
+  {
+    "slide": 23,
+    "title": "",
+    "mainImage": "image25.jpeg",
+    "allImages": [
+      "image25.jpeg"
+    ]
+  },
+  {
+    "slide": 24,
+    "title": "TRANSACTIONS",
+    "mainImage": null,
+    "allImages": []
+  },
+  {
+    "slide": 25,
+    "title": "",
+    "mainImage": "image26.jpeg",
+    "allImages": [
+      "image5.png",
+      "image26.jpeg",
+      "image6.png"
+    ]
+  },
+  {
+    "slide": 26,
+    "title": "",
+    "mainImage": "image27.jpeg",
+    "allImages": [
+      "image27.jpeg"
+    ]
+  },
+  {
+    "slide": 27,
+    "title": "",
+    "mainImage": "image28.jpeg",
+    "allImages": [
+      "image28.jpeg"
+    ]
+  },
+  {
+    "slide": 28,
+    "title": "",
+    "mainImage": "image29.jpeg",
+    "allImages": [
+      "image29.jpeg"
+    ]
+  },
+  {
+    "slide": 29,
+    "title": "",
+    "mainImage": "image30.png",
+    "allImages": [
+      "image30.png"
+    ]
+  },
+  {
+    "slide": 30,
+    "title": "",
+    "mainImage": "image31.jpeg",
+    "allImages": [
+      "image31.jpeg"
+    ]
+  },
+  {
+    "slide": 31,
+    "title": "",
+    "mainImage": "image32.jpeg",
+    "allImages": [
+      "image32.jpeg"
+    ]
+  },
+  {
+    "slide": 32,
+    "title": "",
+    "mainImage": "image33.jpeg",
+    "allImages": [
+      "image33.jpeg"
+    ]
+  },
+  {
+    "slide": 33,
+    "title": "",
+    "mainImage": "image34.jpeg",
+    "allImages": [
+      "image34.jpeg"
+    ]
+  },
+  {
+    "slide": 34,
+    "title": "",
+    "mainImage": "image35.jpeg",
+    "allImages": [
+      "image35.jpeg"
+    ]
+  },
+  {
+    "slide": 35,
+    "title": "",
+    "mainImage": "image36.jpeg",
+    "allImages": [
+      "image36.jpeg"
+    ]
+  },
+  {
+    "slide": 36,
+    "title": "",
+    "mainImage": "image37.jpeg",
+    "allImages": [
+      "image37.jpeg"
+    ]
+  },
+  {
+    "slide": 37,
+    "title": "",
+    "mainImage": "image38.jpeg",
+    "allImages": [
+      "image38.jpeg"
+    ]
+  },
+  {
+    "slide": 38,
+    "title": "",
+    "mainImage": "image39.jpeg",
+    "allImages": [
+      "image39.jpeg"
+    ]
+  },
+  {
+    "slide": 39,
+    "title": "",
+    "mainImage": "image40.jpeg",
+    "allImages": [
+      "image40.jpeg"
+    ]
+  },
+  {
+    "slide": 40,
+    "title": "",
+    "mainImage": "image41.jpeg",
+    "allImages": [
+      "image41.jpeg"
+    ]
+  },
+  {
+    "slide": 41,
+    "title": "",
+    "mainImage": "image42.jpeg",
+    "allImages": [
+      "image42.jpeg"
+    ]
+  },
+  {
+    "slide": 42,
+    "title": "",
+    "mainImage": "image43.jpeg",
+    "allImages": [
+      "image43.jpeg"
+    ]
+  },
+  {
+    "slide": 43,
+    "title": "",
+    "mainImage": "image44.jpeg",
+    "allImages": [
+      "image44.jpeg"
+    ]
+  },
+  {
+    "slide": 44,
+    "title": "",
+    "mainImage": "image45.jpeg",
+    "allImages": [
+      "image45.jpeg"
+    ]
+  },
+  {
+    "slide": 45,
+    "title": "",
+    "mainImage": "image46.jpeg",
+    "allImages": [
+      "image46.jpeg"
+    ]
+  },
+  {
+    "slide": 46,
+    "title": "",
+    "mainImage": "image47.jpeg",
+    "allImages": [
+      "image47.jpeg"
+    ]
+  },
+  {
+    "slide": 47,
+    "title": "",
+    "mainImage": "image48.jpeg",
+    "allImages": [
+      "image48.jpeg"
+    ]
+  },
+  {
+    "slide": 48,
+    "title": "",
+    "mainImage": "image49.jpeg",
+    "allImages": [
+      "image5.png",
+      "image49.jpeg"
+    ]
+  },
+  {
+    "slide": 49,
+    "title": "",
+    "mainImage": "image50.jpeg",
+    "allImages": [
+      "image5.png",
+      "image50.jpeg"
+    ]
+  },
+  {
+    "slide": 50,
+    "title": "REPORTS",
+    "mainImage": null,
+    "allImages": []
+  },
+  {
+    "slide": 51,
+    "title": "",
+    "mainImage": "image51.jpeg",
+    "allImages": [
+      "image5.png",
+      "image51.jpeg",
+      "image6.png"
+    ]
+  },
+  {
+    "slide": 52,
+    "title": "",
+    "mainImage": "image52.jpeg",
+    "allImages": [
+      "image5.png",
+      "image52.jpeg",
+      "image6.png"
+    ]
+  },
+  {
+    "slide": 53,
+    "title": "",
+    "mainImage": "image53.jpeg",
+    "allImages": [
+      "image53.jpeg"
+    ]
+  },
+  {
+    "slide": 54,
+    "title": "",
+    "mainImage": "image54.jpeg",
+    "allImages": [
+      "image54.jpeg"
+    ]
+  },
+  {
+    "slide": 55,
+    "title": "",
+    "mainImage": "image55.jpeg",
+    "allImages": [
+      "image5.png",
+      "image55.jpeg",
+      "image6.png"
+    ]
+  },
+  {
+    "slide": 56,
+    "title": "",
+    "mainImage": "image56.jpeg",
+    "allImages": [
+      "image56.jpeg"
+    ]
+  },
+  {
+    "slide": 57,
+    "title": "",
+    "mainImage": "image57.jpeg",
+    "allImages": [
+      "image57.jpeg"
+    ]
+  },
+  {
+    "slide": 58,
+    "title": "",
+    "mainImage": "image58.png",
+    "allImages": [
+      "image5.png",
+      "image58.png"
+    ]
+  },
+  {
+    "slide": 59,
+    "title": "",
+    "mainImage": "image59.jpeg",
+    "allImages": [
+      "image59.jpeg"
+    ]
+  },
+  {
+    "slide": 60,
+    "title": "",
+    "mainImage": "image60.png",
+    "allImages": [
+      "image5.png",
+      "image60.png"
+    ]
+  },
+  {
+    "slide": 61,
+    "title": "",
+    "mainImage": "image61.jpeg",
+    "allImages": [
+      "image61.jpeg"
+    ]
+  },
+  {
+    "slide": 62,
+    "title": "",
+    "mainImage": "image62.jpeg",
+    "allImages": [
+      "image62.jpeg"
+    ]
+  },
+  {
+    "slide": 63,
+    "title": "",
+    "mainImage": "image63.jpeg",
+    "allImages": [
+      "image63.jpeg"
+    ]
+  },
+  {
+    "slide": 64,
+    "title": "",
+    "mainImage": "image64.jpeg",
+    "allImages": [
+      "image64.jpeg"
+    ]
+  },
+  {
+    "slide": 65,
+    "title": "",
+    "mainImage": "image65.png",
+    "allImages": [
+      "image5.png",
+      "image65.png"
+    ]
+  },
+  {
+    "slide": 66,
+    "title": "",
+    "mainImage": "image66.jpeg",
+    "allImages": [
+      "image5.png",
+      "image66.jpeg"
+    ]
+  },
+  {
+    "slide": 67,
+    "title": "",
+    "mainImage": "image67.jpeg",
+    "allImages": [
+      "image67.jpeg"
+    ]
+  },
+  {
+    "slide": 68,
+    "title": "",
+    "mainImage": "image68.jpeg",
+    "allImages": [
+      "image68.jpeg"
+    ]
+  },
+  {
+    "slide": 69,
+    "title": "",
+    "mainImage": "image69.jpeg",
+    "allImages": [
+      "image5.png",
+      "image69.jpeg"
+    ]
+  },
+  {
+    "slide": 70,
+    "title": "",
+    "mainImage": "image70.jpeg",
+    "allImages": [
+      "image5.png",
+      "image70.jpeg"
+    ]
+  },
+  {
+    "slide": 71,
+    "title": "",
+    "mainImage": "image71.jpeg",
+    "allImages": [
+      "image71.jpeg"
+    ]
+  },
+  {
+    "slide": 72,
+    "title": "",
+    "mainImage": "image72.jpeg",
+    "allImages": [
+      "image72.jpeg"
+    ]
+  },
+  {
+    "slide": 73,
+    "title": "Thank You",
+    "mainImage": "image5.png",
+    "allImages": [
+      "image5.png"
+    ]
+  }
+]
