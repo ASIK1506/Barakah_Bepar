@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MdiShell } from './components/MdiShell';
 import { LoginScreen } from './components/LoginScreen';
+import { AdminLayout } from './components/admin/AdminLayout';
 import { PosBillingScreen } from './components/PosBillingScreen';
 import { SettingsModal, AppSettings } from './components/SettingsModal';
 import {
@@ -53,6 +54,7 @@ export const App: React.FC = () => {
   const [appSettings, setAppSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [childMinimized, setChildMinimized] = useState<boolean>(false);
   const [childMaximized, setChildMaximized] = useState<boolean>(true);
+  const [adminPreviewClassicPos, setAdminPreviewClassicPos] = useState<boolean>(false);
 
   const isEnglish = appSettings.language === 'english';
 
@@ -183,6 +185,7 @@ export const App: React.FC = () => {
 
   const handleLogOff = () => {
     setCurrentUser(null);
+    setAdminPreviewClassicPos(false);
     try {
       getStorage().removeItem('barakah_user');
       /* Also clear the other storage to be safe */
@@ -192,12 +195,13 @@ export const App: React.FC = () => {
     setActiveModule('sales_billing');
   };
 
-  // If not logged in, show exact Slide 4 / image4.jpeg Login Screen
+  // If not logged in, show Login Screen
   if (!currentUser) {
     return (
       <LoginScreen
         onLogin={(user) => {
           setCurrentUser(user);
+          setAdminPreviewClassicPos(false);
           try {
             getStorage().setItem('barakah_user', JSON.stringify(user));
           } catch {}
@@ -210,27 +214,62 @@ export const App: React.FC = () => {
     );
   }
 
-  return (
-    <MdiShell
-      activeModule={activeModule}
-      onSelectModule={handleSelectModule}
-      onOpenSettings={() => setIsSettingsOpen(true)}
-      isChildMinimized={childMinimized}
-      onRestoreChild={() => setChildMinimized(false)}
-      onCloseChild={() => { setChildMinimized(false); setActiveModule('none'); }}
-      isEnglish={isEnglish}
-      currentUser={currentUser}
-      onLogOff={handleLogOff}
-    >
-      {renderModuleContent()}
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        settings={appSettings}
-        onSaveSettings={handleSaveSettings}
+  // Admin role opens Modern HQ Admin Dashboard (unless explicitly previewing Classic POS)
+  if (currentUser.role === 'Administrator' && !adminPreviewClassicPos) {
+    return (
+      <AdminLayout
+        currentUser={currentUser}
+        onLogOff={handleLogOff}
+        onPreviewClassicPos={() => setAdminPreviewClassicPos(true)}
       />
-    </MdiShell>
+    );
+  }
+
+  return (
+    <>
+      {currentUser.role === 'Administrator' && adminPreviewClassicPos && (
+        <button
+          onClick={() => setAdminPreviewClassicPos(false)}
+          style={{
+            position: 'fixed',
+            bottom: 10,
+            right: 12,
+            zIndex: 9999,
+            background: '#1F4E63',
+            color: '#FFFFFF',
+            border: '1px solid #FFFFFF',
+            borderRadius: 6,
+            padding: '5px 12px',
+            fontSize: 11.5,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+          }}
+        >
+          ← Back to HQ Admin Dashboard
+        </button>
+      )}
+      <MdiShell
+        activeModule={activeModule}
+        onSelectModule={handleSelectModule}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        isChildMinimized={childMinimized}
+        onRestoreChild={() => setChildMinimized(false)}
+        onCloseChild={() => { setChildMinimized(false); setActiveModule('none'); }}
+        isEnglish={isEnglish}
+        currentUser={currentUser}
+        onLogOff={handleLogOff}
+      >
+        {renderModuleContent()}
+
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          settings={appSettings}
+          onSaveSettings={handleSaveSettings}
+        />
+      </MdiShell>
+    </>
   );
 };
 export default App;

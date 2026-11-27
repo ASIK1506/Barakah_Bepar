@@ -4,6 +4,24 @@
 
 ---
 
+## 0. Client Answers & Key Architecture Decisions
+
+| # | Question | Decision |
+| :-: | :--- | :--- |
+| Q1 | Cloud Database & Sync | **Demo: localStorage only (no Supabase/Postgres).** Vercel link = frontend only (no backend). Post-approval: deploy to client's own hosting server with real backend. |
+| Q2 | Owner Mobile App | **Yes — separate mobile apps** for Owner + Shop. Private to Moideen's company only (not published to Play Store). |
+| Q3 | WhatsApp Integration | **Yes — keep WhatsApp integration** for bills, credit reminders, and daily closing reports. |
+| Q4 | License Expansion Unlock | **Skip for demo.** Future scope only — implement after core software is complete and working. |
+| Q5 | Weighing Scale / Rates | **No physical scale integration.** Cashier manually enters weight via keyboard. Multiple rates already in codebase (`rate`, `wholesaleRate`, `branchRate`). Admin creates rates, cashier selects from dropdown. |
+
+### UI Architecture Decision
+| Login Role | UI Style | Rationale |
+| :--- | :--- | :--- |
+| **Admin / HQ Owner** | **Modern React UI** — clean cards, Lucide icons, sidebar nav, analytics dashboard | Manager is tech-savvy, needs new features & analytics |
+| **Shop / Cashier** | **Classic Windows POS UI** — unchanged legacy look & feel | Shop staff cannot adapt to new UI quickly; speed & familiarity are critical |
+
+---
+
 ## 1. Team Ownership & Parallel Execution Model
 
 To ship fast without merge conflicts or overwriting legacy UI work:
@@ -25,9 +43,9 @@ Every item from the client's feature sheet and verbal requirements mapped to its
 | # | Requirement / Feature | Target Phase |
 | :-: | :--- | :--- |
 | 1 | Owner HQ login + 5 individual shop logins (simultaneous multi-shop billing) | Phase 2 |
-| 2 | 5-shop license cap + paid unlock option for Shop #6+ & shop renaming | Phase 2 |
-| 3 | 2-week demo trial control, implementation & training checklist | Phase 2 / Phase 8 |
-| 4 | Central cloud database + offline-resilient Electron terminal sync | Phase 1 |
+| 2 | 5-shop license cap + paid unlock option for Shop #6+ & shop renaming | ~~Phase 2~~ **Future Scope** |
+| 3 | 2-week demo trial control, implementation & training checklist | ~~Phase 2~~ **Future Scope** |
+| 4 | Central cloud database + offline-resilient Electron terminal sync | ~~Phase 1~~ **Post-Approval (Server Deployment)** |
 | 5 | Central inventory with multi-shop stock entry & manager allocation | Phase 3 |
 | 6 | Box, piece (`20/40 pcs/box`) & bulk kg (`100 kg bag → 250g/500g/1kg/2kg/5kg`) handling + dynamic slab rates | Phase 3 |
 | 7 | Shop-to-shop stock transfer with dispatch & receive audit records | Phase 3 |
@@ -61,33 +79,36 @@ Every item from the client's feature sheet and verbal requirements mapped to its
 
 ---
 
-### Phase 1: Central Cloud Data Layer & Offline Sync Architecture *(Architecture Prerequisite)*
-> *Why first:* Since 5 shops will bill simultaneously on desktop Electron apps while the HQ Owner views live consolidated analytics, local-only `localStorage` is no longer sufficient.
+### Phase 1: Demo Foundation — Admin Portal Shell & Multi-Shop Data Architecture *(DEMO PRIORITY)*
+> *Why first:* The demo needs to show the HQ Admin can manage 5 shops and see consolidated data. For the demo, all data stays in localStorage — no backend server needed.
 
-- [ ] **1.1 Backend & Database Setup**
-  - [ ] Provision authoritative cloud PostgreSQL database (e.g., Supabase / Neon Postgres + REST/API layer).
-  - [ ] Design normalized multi-tenant schema (`organizations`, `licenses`, `shops`, `users`, `products`, `product_uoms`, `product_batches`, `warehouse_stock`, `shop_stock`, `stock_transfers`, `invoices`, `invoice_items`, `credit_ledger_entries`, `suppliers`, `purchases`, `expenses`, `audit_logs`).
-- [ ] **1.2 Electron Offline-First Outbox Queue**
-  - [ ] Persist every completed bill locally (`C:\BarakahBepaar_Data`) immediately before printing (never lose a sale if internet drops).
-  - [ ] Implement background FIFO outbox sync worker in `electron/main.cjs` / web sync service using idempotent invoice IDs (`<SHOP_CODE>-<FY>-<SEQ>`).
-  - [ ] Add connection status & pending-sync counter pill in the top bar (Green = Synced, Amber = Queued Offline).
-- [ ] **1.3 Automated Daily Backup Engine**
-  - [ ] Auto-export daily closing snapshot JSON/CSV to `C:\BarakahBepaar_Data\backups\YYYY-MM-DD\`.
-  - [ ] Add one-click manual backup download & restore utility for Shop/HQ Admins.
+- [ ] **1.1 Admin Dashboard Shell (Modern UI)**
+  - [ ] Create `AdminLayout.tsx` — modern sidebar-based layout with Lucide icons, clean cards, dark sidebar navigation.
+  - [ ] Admin route: when ADMIN logs in → show Admin Dashboard (not POS billing screen).
+  - [ ] Dashboard landing page: 5 shop cards showing shop name, today's sales total, bill count, active status.
+  - [ ] Navigation: Dashboard, Shops, Inventory, Reports, Users, Settings.
+
+- [ ] **1.2 Multi-Shop Data Model (localStorage for Demo)**
+  - [ ] Create `shopStore.ts` — manage 5 shop profiles (name, code, address, GSTIN, status) in localStorage.
+  - [ ] Pre-seed 5 demo shops: `Moideen Supermarket - Anna Nagar`, `Moideen Supermarket - T.Nagar`, `Moideen Supermarket - Velachery`, `Moideen Supermarket - Tambaram`, `Moideen Supermarket - Porur`.
+  - [ ] Each shop has its own product stock, invoice sequence, and customer list (shop-scoped keys in localStorage).
+
+- [ ] **1.3 Conditional UI Routing by Role**
+  - [ ] `ADMIN` login → Modern Admin Dashboard (new UI).
+  - [ ] `SHOP1` / `USER` / Cashier login → Classic POS billing screen (unchanged legacy UI).
+  - [ ] Add "Switch to Shop View" button in Admin for quick preview.
 
 ---
 
-### Phase 2: HQ Owner Admin Portal, Multi-Shop Licensing & RBAC
-- [ ] **2.1 Role-Based Authentication (`Owner`, `Shop Manager`, `Cashier`)**
-  - [ ] Upgrade `LoginScreen.tsx` to support **HQ Owner Login** and **Shop-Scoped Logins** (with Shop selector or shop-bound username e.g. `shop1_cashier`).
-  - [ ] Enforce strict RBAC: Cashiers access POS + assigned shop only; Shop Managers manage branch stock/returns; HQ Owner accesses all 5 shops + Admin portal.
-- [ ] **2.2 Multi-Shop Management & 5-Shop License Cap**
-  - [ ] Build **HQ Admin Console** (`Shop Management` module).
-  - [ ] Enforce **maximum 5 active shops** on the standard license (`Shops Created: X / 5`).
-  - [ ] Allow HQ Owner to **rename shops** dynamically (e.g., `Shop A → Anna Nagar Branch`), edit address/GSTIN/phone, and toggle Active/Suspended status.
-  - [ ] Implement **"Add Additional Shop (Paid Expansion)"** flow: displays license limit dialog when reaching 5 shops and allows unlocking Slot #6+ via an encrypted/signed **Expansion License Key** generated for paying customers.
-- [ ] **2.3 2-Week Demo / Trial & Licensing Guard**
-  - [ ] Support configurable **14-day Demo Trial** banner & expiry check for client pilot installations (`Trial Days Remaining: 14`) with license activation screen.
+### Phase 2: HQ Owner Admin Portal — Shop Management & User RBAC
+- [ ] **2.1 Shop Management Screen (Admin UI)**
+  - [ ] CRUD for shops: create, rename, edit address/GSTIN/phone, toggle Active/Suspended.
+  - [ ] Visual shop limit indicator: `Shops: 3 / 5 Active`.
+  - [ ] Each shop gets its own login accounts (auto-created: `SHOP1_CASHIER`, `SHOP1_MANAGER`, etc.).
+
+- [ ] **2.2 User & Role Management (Admin UI)**
+  - [ ] Upgrade `UserScreens.tsx` for admin: assign users to shops, set roles (`Owner`, `Shop Manager`, `Cashier`).
+  - [ ] Permission matrix per role (which screens/actions each role can access).
 
 ---
 
@@ -103,8 +124,8 @@ Every item from the client's feature sheet and verbal requirements mapped to its
     - Stock automatically tracks fractional box balance (e.g., `4 Boxes, 38 Pcs` or `198 Pcs`).
   - [ ] **Scenario B — Bulk Kg Bags to Variable Weight Packs (`250g`, `500g`, `1kg`, `2kg`, `5kg`):**
     - Buy `100 kg Wheat` centrally → stored as `100,000 g` base inventory.
-    - Support **weight-slab pricing table** per product (e.g., `250g = ₹18`, `500g = ₹34`, `1kg = ₹65`, `2kg = ₹128`, `5kg = ₹310`) instead of strict linear multiplication when slab rates differ!
-    - Integrate quick weight selector presets (`250g`, `500g`, `1kg`, `2kg`, `5kg`) + RS-232 electronic scale weight capture at POS.
+    - Admin creates **multiple rate entries** per product for different quantities/wholesale tiers.
+    - Cashier selects rate from admin-defined dropdown at POS.
 - [ ] **3.3 Warehouse-to-Shop Allocation & Shop-to-Shop Transfers**
   - [ ] **Admin Stock Issue / Allocation screen:** HQ Manager selects Central stock (`100 kg` or `10 Boxes`) and allocates quantities across Shop A–E.
   - [ ] **Shop Goods Receipt (GRN):** Receiving shop confirms incoming stock distribution into its shop floor inventory.
@@ -169,17 +190,34 @@ Every item from the client's feature sheet and verbal requirements mapped to its
   - [ ] **Send Bill on WhatsApp:** Instant WhatsApp share after billing (`wa.me` structured digital receipt or WhatsApp Cloud API PDF link).
   - [ ] **Credit (Udhaar) Payment Reminders:** One-click / scheduled polite WhatsApp reminder in **Tamil & English** containing pending bill numbers and total due amount.
   - [ ] **Automated Daily Closing Report:** Formatted WhatsApp summary at day-end (`Shop-wise Sales, Cash/UPI/Credit split, Profit, Expenses, Low Stock count`) sent to Owner's WhatsApp.
-- [ ] **7.2 Owner Mobile App / Live Mobile PWA**
-  - [ ] Build mobile-responsive **Owner Live View** (`/owner-mobile` PWA installable on Android & iOS via existing `site.webmanifest`):
-    - Live today's sales per shop (auto-refreshing), Cash/UPI/Credit gauges, pending Udhaar dues, and urgent low-stock alerts.
+- [ ] **7.2 Owner & Shop Mobile Apps (Private — Not on Play Store)**
+  - [ ] Build separate mobile-responsive views for Owner and Shop usage:
+    - **Owner App:** Live today's sales per shop (auto-refreshing), Cash/UPI/Credit gauges, pending Udhaar dues, and urgent low-stock alerts.
+    - **Shop App:** Lightweight mobile POS or stock check for shop floor staff.
+  - [ ] Distribute as private APKs or PWA (not published on Google Play Store).
 
 ---
 
-### Phase 8: Pilot Rollout, Hardware QA, 2-Week Demo & Production Release
-- [ ] **8.1 Hardware Stress Test on Windows Electron**
+### Phase 8: Server Deployment, Hardware QA & Production Release
+- [ ] **8.1 Server Deployment (Post Client Approval)**
+  - [ ] Deploy to client's own hosting server with real PostgreSQL/MySQL backend.
+  - [ ] Convert localStorage data layer to server API calls.
+  - [ ] Setup automated daily backups on the server.
+- [ ] **8.2 Hardware Stress Test on Windows Electron**
   - [ ] Verify RS-232 weighing scale streaming, USB barcode scanner, 58/80mm ESC/POS printing, and cash drawer kick across Windows 10/11 terminals.
-- [ ] **8.2 2-Week Client Demo & Staff Training Package**
+- [ ] **8.3 Client Training & Go-Live**
   - [ ] Pre-load realistic multi-shop demo seed data (5 sample shops, wholesale boxes & bulk weight SKUs, sample Udhaar ledgers).
   - [ ] Produce 1-page bilingual **Cashier Quick-Start Shortcut Sheet** + **HQ Admin Training Guide**.
-- [ ] **8.3 Production Windows Installer & Go-Live**
   - [ ] Build signed/packaged **Barakah Bepaar Setup `.exe`** + **Portable `.exe`** and shadow-run at Pilot Shop before full 5-shop rollout.
+
+---
+
+## 4. Demo Submission Notes
+
+> **Vercel Link** (`https://web-one-tawny-bgge8e6but.vercel.app/`): Contains frontend files only — **no backend functionality**. All data is stored in browser localStorage for demonstration purposes. Full server-side functionality will be deployed to client's hosting server post-approval.
+
+> **Demo Accounts:**
+> | Username | Password | Role | UI |
+> | :--- | :--- | :--- | :--- |
+> | `admin` | `admin` | Administrator / HQ Owner | Modern Admin Dashboard |
+> | `shop1` | `shop1` | Shop Cashier | Classic POS Billing Screen |
