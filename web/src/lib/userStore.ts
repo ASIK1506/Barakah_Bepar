@@ -43,6 +43,7 @@ const PERMS_STORAGE_KEY = 'barakah_user_permissions_v1';
 
 export const DEFAULT_USERS: UserAccount[] = [
   { username: 'ADMIN', password: 'admin', level: 'Administrator' },
+  { username: 'SHOP1', password: 'shop1', level: 'User' },
   { username: 'USER', password: 'user', level: 'User' }
 ];
 

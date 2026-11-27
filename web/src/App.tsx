@@ -35,9 +35,14 @@ const DEFAULT_SETTINGS: AppSettings = {
 };
 
 export const App: React.FC = () => {
+  /* Platform-aware session persistence:
+   * - Electron desktop app: use localStorage (persist until explicit Log Off)
+   * - Chrome / Vercel web: use sessionStorage (require login every page load) */
+  const getStorage = () => (window as any).isElectron ? localStorage : sessionStorage;
+
   const [currentUser, setCurrentUser] = useState<{ username: string; role: string } | null>(() => {
     try {
-      const saved = localStorage.getItem('barakah_user');
+      const saved = getStorage().getItem('barakah_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -179,7 +184,10 @@ export const App: React.FC = () => {
   const handleLogOff = () => {
     setCurrentUser(null);
     try {
+      getStorage().removeItem('barakah_user');
+      /* Also clear the other storage to be safe */
       localStorage.removeItem('barakah_user');
+      sessionStorage.removeItem('barakah_user');
     } catch {}
     setActiveModule('sales_billing');
   };
@@ -191,7 +199,7 @@ export const App: React.FC = () => {
         onLogin={(user) => {
           setCurrentUser(user);
           try {
-            localStorage.setItem('barakah_user', JSON.stringify(user));
+            getStorage().setItem('barakah_user', JSON.stringify(user));
           } catch {}
           setActiveModule('sales_billing');
           setChildMinimized(false);
