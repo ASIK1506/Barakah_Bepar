@@ -61,6 +61,15 @@ export const MdiShell: React.FC<MdiShellProps> = ({
     }
   };
 
+  const handleExitToLogin = () => {
+    setOpenMenu(null);
+    if (onLogOff) {
+      onLogOff();
+    } else {
+      window.location.reload();
+    }
+  };
+
   const handleCloseApp = () => {
     const msg = isEnglish
       ? 'Are you sure you want to exit Barakah Bepaar Retail Software?'
@@ -196,8 +205,8 @@ export const MdiShell: React.FC<MdiShellProps> = ({
           {isEnglish ? <><u>S</u>ettings</> : 'அமைப்புகள்'}
         </div>
 
-        {/* EXIT */}
-        <div className="win-menubar-item" onClick={handleCloseApp} title={isEnglish ? 'Exit Application' : 'வெளியேறு'}>
+        {/* EXIT -> Redirects cleanly to Login Screen */}
+        <div className="win-menubar-item" onClick={handleExitToLogin} title={isEnglish ? 'Exit to Login Screen' : 'உள்நுழைவு திரைக்குத் திரும்பு'}>
           {isEnglish ? <><u>E</u>xit</> : 'வெளியேறு'}
         </div>
       </div>
