@@ -118,15 +118,37 @@ export interface StockAllocationRecord {
   note: string;
 }
 
+export interface CustomerPaymentRecord {
+  id: string;
+  date: string;
+  time: string;
+  customerCode: string;
+  customerName: string;
+  customerPhone: string;
+  billNo: string; // specific bill number or 'FIFO / Account'
+  amount: number;
+  method: 'CASH' | 'UPI' | 'CARD';
+  balanceAfter: number;
+  note: string;
+}
+
+export interface AdminCustomer extends Customer {
+  customerType?: 'Retail' | 'Wholesale';
+  creditLimit?: number;
+  totalOrders?: number;
+  totalSpent?: number;
+}
+
 export interface AdminStoreData {
   shops: ShopProfile[];
   products: AdminProduct[];
-  customers: Customer[];
+  customers: AdminCustomer[];
   bills: AdminBill[];
   vendors: AdminVendor[];
   purchases: AdminPurchaseEntry[];
   expenses: AdminExpense[];
   allocations: StockAllocationRecord[];
+  customerPayments?: CustomerPaymentRecord[];
   ownerWhatsapp: string;
 }
 
@@ -579,15 +601,101 @@ function buildInitialSeedData(): AdminStoreData {
     }
   ];
 
+  const adminCustomers: AdminCustomer[] = [
+    {
+      code: 'C3',
+      name: 'Barakah Traders',
+      tamilName: 'பரக்கா வர்த்தகம்',
+      phone1: '9840048123',
+      phone2: '9600246616',
+      balance: 3500,
+      previousPurchase: todayStr(0),
+      points: 150,
+      customerType: 'Wholesale',
+      creditLimit: 25000,
+      totalOrders: 2,
+      totalSpent: 17700
+    },
+    {
+      code: 'C7',
+      name: 'A.S VEGITABLE STORE',
+      tamilName: 'ஏ.எஸ் காய்கறி அங்காடி',
+      phone1: '9840123456',
+      balance: 5000,
+      previousPurchase: todayStr(-1),
+      points: 420,
+      customerType: 'Wholesale',
+      creditLimit: 25000,
+      totalOrders: 1,
+      totalSpent: 14000
+    },
+    {
+      code: 'C10',
+      name: 'K. Rahman',
+      tamilName: 'கே. ரஹ்மான்',
+      phone1: '9840199220',
+      balance: 0,
+      previousPurchase: todayStr(0),
+      points: 85,
+      customerType: 'Retail',
+      creditLimit: 5000,
+      totalOrders: 1,
+      totalSpent: 3300
+    },
+    {
+      code: 'C11',
+      name: 'S. Fatima',
+      tamilName: 'எஸ். பாத்திமா',
+      phone1: '9840233110',
+      balance: 0,
+      previousPurchase: todayStr(-2),
+      points: 110,
+      customerType: 'Retail',
+      creditLimit: 3000,
+      totalOrders: 1,
+      totalSpent: 4600
+    }
+  ];
+
+  const customerPayments: CustomerPaymentRecord[] = [
+    {
+      id: 'cpay-1',
+      date: todayStr(0),
+      time: '02:45 PM',
+      customerCode: 'C3',
+      customerName: 'Barakah Traders',
+      customerPhone: '9840048123',
+      billNo: 'SH1-0117',
+      amount: 5000,
+      method: 'UPI',
+      balanceAfter: 3500,
+      note: 'Upfront partial settlement at billing'
+    },
+    {
+      id: 'cpay-2',
+      date: todayStr(-1),
+      time: '06:50 PM',
+      customerCode: 'C7',
+      customerName: 'A.S VEGITABLE STORE',
+      customerPhone: '9840123456',
+      billNo: 'SH1-0114',
+      amount: 9000,
+      method: 'CASH',
+      balanceAfter: 5000,
+      note: 'Partial payment against wholesale invoice'
+    }
+  ];
+
   return {
     shops: [demoShop],
     products,
-    customers: SEED_CUSTOMERS,
+    customers: adminCustomers,
     bills,
     vendors,
     purchases,
     expenses,
     allocations,
+    customerPayments,
     ownerWhatsapp: '9840048123'
   };
 }
@@ -598,6 +706,11 @@ export function loadAdminStore(): AdminStoreData {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.shops) && parsed.shops.length > 0) {
+        if (!Array.isArray(parsed.customerPayments)) {
+          const fresh = buildInitialSeedData();
+          parsed.customerPayments = fresh.customerPayments;
+          parsed.customers = fresh.customers;
+        }
         return parsed;
       }
     }
@@ -605,6 +718,87 @@ export function loadAdminStore(): AdminStoreData {
   const initial = buildInitialSeedData();
   saveAdminStore(initial);
   return initial;
+}
+
+export function collectCustomerUdharPayment(
+  store: AdminStoreData,
+  params: {
+    customerCode: string;
+    amount: number;
+    method: 'CASH' | 'UPI' | 'CARD';
+    specificBillNo?: string;
+    note?: string;
+  }
+): AdminStoreData {
+  const cust = store.customers.find(c => c.code === params.customerCode);
+  if (!cust || params.amount <= 0) return store;
+
+  let remainingPayment = Math.min(params.amount, cust.balance);
+  const newBalance = Number(Math.max(0, cust.balance - remainingPayment).toFixed(2));
+  const appliedBills: string[] = [];
+
+  // Settle either specific bill first, or FIFO across oldest pending bills
+  const sortedBills = [...store.bills].sort((a, b) => a.date.localeCompare(b.date));
+  const pendingBillUpdates: Record<string, { paidAmount: number; pendingAmount: number; status: AdminBill['status'] }> = {};
+
+  if (params.specificBillNo) {
+    const target = sortedBills.find(b => b.billNo === params.specificBillNo && b.pendingAmount > 0);
+    if (target) {
+      const apply = Math.min(remainingPayment, target.pendingAmount);
+      const nextPaid = target.paidAmount + apply;
+      const nextPending = Number(Math.max(0, target.netAmount - nextPaid).toFixed(2));
+      pendingBillUpdates[target.id] = {
+        paidAmount: nextPaid,
+        pendingAmount: nextPending,
+        status: nextPending === 0 ? 'Completed' : 'Credit Pending'
+      };
+      appliedBills.push(target.billNo);
+      remainingPayment -= apply;
+    }
+  }
+
+  for (const b of sortedBills) {
+    if (remainingPayment <= 0) break;
+    if (pendingBillUpdates[b.id]) continue;
+    if (b.customerCode !== cust.code && b.customerName.toLowerCase() !== cust.name.toLowerCase()) continue;
+    if (b.pendingAmount <= 0 || b.status === 'Cancelled') continue;
+
+    const apply = Math.min(remainingPayment, b.pendingAmount);
+    const nextPaid = b.paidAmount + apply;
+    const nextPending = Number(Math.max(0, b.netAmount - nextPaid).toFixed(2));
+    pendingBillUpdates[b.id] = {
+      paidAmount: nextPaid,
+      pendingAmount: nextPending,
+      status: nextPending === 0 ? 'Completed' : 'Credit Pending'
+    };
+    appliedBills.push(b.billNo);
+    remainingPayment -= apply;
+  }
+
+  const nextBills = store.bills.map(b => (pendingBillUpdates[b.id] ? { ...b, ...pendingBillUpdates[b.id] } : b));
+  const nextCustomers = store.customers.map(c => (c.code === cust.code ? { ...c, balance: newBalance } : c));
+
+  const now = new Date();
+  const paymentLog: CustomerPaymentRecord = {
+    id: `cpay-${Date.now()}`,
+    date: now.toISOString().slice(0, 10),
+    time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    customerCode: cust.code,
+    customerName: cust.name,
+    customerPhone: cust.phone1,
+    billNo: appliedBills.length > 0 ? appliedBills.join(', ') : params.specificBillNo || 'Account Recovery',
+    amount: Math.min(params.amount, cust.balance),
+    method: params.method,
+    balanceAfter: newBalance,
+    note: params.note || 'Udhar recovery payment'
+  };
+
+  return {
+    ...store,
+    customers: nextCustomers,
+    bills: nextBills,
+    customerPayments: [paymentLog, ...(store.customerPayments || [])]
+  };
 }
 
 export function saveAdminStore(data: AdminStoreData): void {

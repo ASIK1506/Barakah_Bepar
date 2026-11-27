@@ -12,7 +12,8 @@ import {
   Bell,
   Sun,
   Moon,
-  ArrowLeft
+  ArrowLeft,
+  UsersRound
 } from 'lucide-react';
 import barakahIcon from '../../assets/barakah-icon.png';
 import {
@@ -32,6 +33,7 @@ import {
   AdminReportingView,
   AdminSettingsView
 } from './AdminViews';
+import { AdminCustomersView } from './AdminCustomersView';
 import { StockAlertDrawer } from './StockAlertDrawer';
 import './AdminTheme.css';
 
@@ -41,7 +43,7 @@ interface AdminLayoutProps {
   onPreviewClassicPos: () => void;
 }
 
-type AdminTab = 'dashboard' | 'inventory' | 'orders' | 'purchase' | 'reporting' | 'shops' | 'settings';
+type AdminTab = 'dashboard' | 'inventory' | 'orders' | 'purchase' | 'customers' | 'reporting' | 'shops' | 'settings';
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
   currentUser,
@@ -91,6 +93,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     { id: 'inventory', label: 'Inventory', icon: <Package size={17} /> },
     { id: 'orders', label: 'Orders', icon: <Layers size={17} /> },
     { id: 'purchase', label: 'Purchase', icon: <ShoppingCart size={17} /> },
+    { id: 'customers', label: 'Customers & Udhar', icon: <UsersRound size={17} /> },
     { id: 'reporting', label: 'Reporting', icon: <BarChart2 size={17} /> },
     { id: 'shops', label: 'Shops', icon: <Store size={17} /> },
     { id: 'settings', label: 'Settings', icon: <Settings size={17} /> }
@@ -271,6 +274,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             <AdminPurchaseView
               store={store}
               initialProductId={reorderProductId}
+              onUpdateStore={handleUpdateStore}
+            />
+          )}
+
+          {activeTab === 'customers' && (
+            <AdminCustomersView
+              store={store}
+              searchQuery={searchQuery}
+              initialBillLookup={selectedBillLookup}
               onUpdateStore={handleUpdateStore}
             />
           )}
