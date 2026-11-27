@@ -13,12 +13,15 @@ import {
   Sun,
   Moon,
   ArrowLeft,
-  UsersRound
+  UsersRound,
+  Smartphone,
+  X
 } from 'lucide-react';
 import barakahIcon from '../../assets/barakah-icon.png';
 import {
   AdminStoreData,
   AdminProduct,
+  formatINR,
   loadAdminStore,
   saveAdminStore,
   resetAdminStore
@@ -58,6 +61,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const [drawerMode, setDrawerMode] = useState<'low' | 'out' | 'udhaar'>('low');
   const [selectedBillLookup, setSelectedBillLookup] = useState<string | undefined>(undefined);
   const [reorderProductId, setReorderProductId] = useState<string | undefined>(undefined);
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
   const handleUpdateStore = (next: AdminStoreData) => {
     setStore(next);
@@ -187,6 +191,17 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               </button>
             </div>
 
+            {/* Owner Mobile App Live Preview */}
+            <button
+              onClick={() => setMobilePreviewOpen(true)}
+              className="bb-btn-outline"
+              style={{ padding: '5px 11px', fontSize: 12, borderRadius: 999 }}
+              title="Preview Owner Live Mobile View"
+            >
+              <Smartphone size={14} color="#1F4E63" />
+              Owner Mobile
+            </button>
+
             {/* Light / Dark Mode Switch Pill matching Screenshot 1-4 */}
             <button
               onClick={() => setDarkMode(d => !d)}
@@ -309,6 +324,75 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         onReorderProduct={handleReorderProduct}
         onGoToOrders={(billNo) => handleNavigate('orders', billNo)}
       />
+
+      {/* Owner Live Mobile App Preview Modal */}
+      {mobilePreviewOpen && (
+        <div
+          className="bb-no-print"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 80
+          }}
+          onClick={() => setMobilePreviewOpen(false)}
+        >
+          <div
+            style={{
+              width: 340,
+              maxHeight: '88vh',
+              borderRadius: 28,
+              border: '8px solid #0F172A',
+              background: '#F1F5F9',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.4)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ background: '#1F4E63', color: '#FFFFFF', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>Barakah Owner Live</div>
+                <div style={{ fontSize: 11, opacity: 0.8 }}>Private Company App · {store.shops.length} Active Shop(s)</div>
+              </div>
+              <button onClick={() => setMobilePreviewOpen(false)} style={{ border: 'none', background: 'rgba(255,255,255,0.18)', color: '#FFF', borderRadius: 99, padding: 5, cursor: 'pointer' }}>
+                <X size={15} />
+              </button>
+            </div>
+            <div style={{ padding: 14, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {store.shops.map(shop => {
+                const today = new Date().toISOString().slice(0, 10);
+                const sBills = store.bills.filter(b => b.shopId === shop.id && b.status !== 'Cancelled');
+                const tBills = sBills.filter(b => b.date === today);
+                const tSales = tBills.reduce((s, b) => s + b.netAmount, 0);
+                const cashAmt = tBills.filter(b => b.paymentMode === 'CASH').reduce((s, b) => s + b.paidAmount, 0);
+                const upiAmt = tBills.filter(b => b.paymentMode === 'UPI').reduce((s, b) => s + b.paidAmount, 0);
+                const udharDue = sBills.reduce((s, b) => s + b.pendingAmount, 0);
+                return (
+                  <div key={shop.id} style={{ background: '#FFFFFF', borderRadius: 12, padding: 12, border: '1px solid #CBD5E1' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ fontSize: 13.5, color: '#1F4E63' }}>{shop.code} · {shop.name}</strong>
+                      <span style={{ fontSize: 10.5, background: '#DCFCE7', color: '#166534', padding: '2px 7px', borderRadius: 99, fontWeight: 700 }}>LIVE</span>
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>{formatINR(tSales)}</div>
+                    <div style={{ fontSize: 11, color: '#64748B' }}>Today ({tBills.length} bills) · Cash {formatINR(cashAmt)} · UPI {formatINR(upiAmt)}</div>
+                    <div style={{ fontSize: 11.5, marginTop: 6, color: '#B45309', fontWeight: 600 }}>Pending Udhaar: {formatINR(udharDue)}</div>
+                  </div>
+                );
+              })}
+              <div style={{ background: '#FFFFFF', borderRadius: 12, padding: 12, border: '1px solid #CBD5E1', fontSize: 12 }}>
+                <div style={{ fontWeight: 700, marginBottom: 4 }}>Alert Snapshot</div>
+                <div>Low / Out Stock SKUs: <strong>{lowOrOutCount}</strong></div>
+                <div>Pending Credit Bills: <strong>{udhaarCount}</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -69,7 +69,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       amount: Math.round((p.rate * (38 - idx * 2.4)) + (idx === 0 ? 1200 : 400))
     }))
     .sort((a, b) => b.amount - a.amount)
-    .slice(0, 8);
+    .slice(0, 10);
   const maxProductSale = Math.max(...topProducts.map(x => x.amount), 1);
 
   // 6-Month Expense vs Profit trend (realistic supermarket baseline + current month live profit/expense)
@@ -294,9 +294,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button
                 className="bb-btn-outline"
                 style={{ width: '100%', justifyContent: 'center', fontSize: 11.5 }}
-                onClick={() => onOpenAlertDrawer('udhaar')}
+                onClick={() => onNavigate('customers')}
               >
-                Bill-Wise Udhaar Lookup
+                Open Customers & Udhar
               </button>
             </div>
 
@@ -339,7 +339,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="bb-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <span style={{ fontSize: 15.5, fontWeight: 700 }}>Top Selling Products</span>
+              <span style={{ fontSize: 15.5, fontWeight: 700 }}>Top 10 Selling Products</span>
               <button
                 onClick={() => onNavigate('reporting')}
                 style={{

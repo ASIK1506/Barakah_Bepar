@@ -434,3 +434,29 @@
 .bb-admin-root.dark-mode .bb-tab-btn.active {
   color: #F8FAFC;
 }
+
+@media print {
+  .bb-sidebar,
+  .bb-topbar,
+  .bb-no-print {
+    display: none !important;
+  }
+  .bb-admin-root,
+  .bb-main-area,
+  .bb-content-scroll {
+    height: auto !important;
+    overflow: visible !important;
+    background: #FFFFFF !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .bb-card {
+    box-shadow: none !important;
+    border: 1px solid #CBD5E1 !important;
+    break-inside: avoid;
+  }
+  .bb-print-only-modal {
+    position: static !important;
+    background: #FFFFFF !important;
+  }
+}

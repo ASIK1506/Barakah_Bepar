@@ -21,6 +21,7 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
 }) => {
   const [mode, setMode] = useState<'low' | 'out' | 'udhaar'>(initialMode);
   const [query, setQuery] = useState('');
+  const [selectedShopId, setSelectedShopId] = useState<string>('all');
 
   React.useEffect(() => {
     setMode(initialMode);
@@ -28,11 +29,17 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const lowItems = store.products.filter(
-    p => p.currentStock > 0 && p.currentStock <= p.lowStockThreshold
+  const getProductStockForView = (p: AdminProduct) =>
+    selectedShopId === 'all' ? p.currentStock : p.shopStocks[selectedShopId] ?? 0;
+
+  const lowItems = store.products.filter(p => {
+    const qty = getProductStockForView(p);
+    return qty > 0 && qty <= p.lowStockThreshold;
+  });
+  const outItems = store.products.filter(p => getProductStockForView(p) <= 0);
+  const pendingBills = store.bills.filter(
+    b => b.pendingAmount > 0 && b.status !== 'Cancelled' && (selectedShopId === 'all' || b.shopId === selectedShopId)
   );
-  const outItems = store.products.filter(p => p.currentStock <= 0);
-  const pendingBills = store.bills.filter(b => b.pendingAmount > 0 && b.status !== 'Cancelled');
 
   const activeProducts = (mode === 'out' ? outItems : lowItems).filter(p =>
     !query.trim() ||
@@ -130,9 +137,19 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
           </button>
         </div>
 
-        {/* Search */}
-        {mode !== 'udhaar' && (
-          <div style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0' }}>
+        {/* Shop Filter + Search */}
+        <div style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <select
+            value={selectedShopId}
+            onChange={e => setSelectedShopId(e.target.value)}
+            style={{ width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5, fontWeight: 600 }}
+          >
+            <option value="all">All Shops Combined ({store.shops.length} Active)</option>
+            {store.shops.map(s => (
+              <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
+            ))}
+          </select>
+          {mode !== 'udhaar' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F1F5F9', padding: '7px 12px', borderRadius: 8 }}>
               <Search size={15} color="#64748B" />
               <input
@@ -142,8 +159,8 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 13, width: '100%' }}
               />
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -154,8 +171,9 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
               </div>
             ) : (
               activeProducts.map(p => {
-                const ratio = Math.min(1, p.currentStock / Math.max(p.lowStockThreshold, 1));
-                const isOut = p.currentStock <= 0;
+                const viewQty = getProductStockForView(p);
+                const ratio = Math.min(1, viewQty / Math.max(p.lowStockThreshold, 1));
+                const isOut = viewQty <= 0;
                 return (
                   <div
                     key={p.id}
@@ -189,7 +207,7 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
                         }}
                       >
                         {isOut ? <PackageX size={12} /> : <AlertTriangle size={12} />}
-                        {p.currentStock} {p.unit}
+                        {viewQty} {p.unit}
                       </span>
                     </div>
 

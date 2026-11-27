@@ -1,5 +1,5 @@
 import { SEED_PRODUCTS, SEED_CUSTOMERS } from '../data/seedData';
-import { Customer } from '../types';
+import { Customer, Invoice } from '../types';
 
 export interface ShopProfile {
   id: string;
@@ -42,6 +42,16 @@ export interface AdminProduct {
   lastSoldDaysAgo: number;
 }
 
+export interface AdminBillLineItem {
+  productId: string;
+  code: string;
+  name: string;
+  qty: number;
+  rate: number;
+  cost: number;
+  total: number;
+}
+
 export interface AdminBill {
   id: string;
   billNo: string;
@@ -65,6 +75,7 @@ export interface AdminBill {
   paymentMode: 'CASH' | 'UPI' | 'CARD' | 'CREDIT';
   status: 'Completed' | 'Credit Pending' | 'Cancelled';
   saleType: 'Retail' | 'Wholesale';
+  items?: AdminBillLineItem[];
 }
 
 export interface AdminVendor {
@@ -118,6 +129,34 @@ export interface StockAllocationRecord {
   note: string;
 }
 
+export interface ShopTransferRecord {
+  id: string;
+  transferNo: string;
+  date: string;
+  fromShopId: string;
+  fromShopName: string;
+  toShopId: string;
+  toShopName: string;
+  productId: string;
+  productName: string;
+  qty: number;
+  unitLabel: string;
+  status: 'Dispatched' | 'Received';
+  reason: string;
+}
+
+export interface SalesReturnRecord {
+  id: string;
+  returnNo: string;
+  originalBillNo: string;
+  date: string;
+  shopId: string;
+  shopName: string;
+  customerName: string;
+  amount: number;
+  reason: string;
+}
+
 export interface CustomerPaymentRecord {
   id: string;
   date: string;
@@ -148,6 +187,8 @@ export interface AdminStoreData {
   purchases: AdminPurchaseEntry[];
   expenses: AdminExpense[];
   allocations: StockAllocationRecord[];
+  shopTransfers?: ShopTransferRecord[];
+  salesReturns?: SalesReturnRecord[];
   customerPayments?: CustomerPaymentRecord[];
   ownerWhatsapp: string;
 }
@@ -686,6 +727,38 @@ function buildInitialSeedData(): AdminStoreData {
     }
   ];
 
+  const shopTransfers: ShopTransferRecord[] = [
+    {
+      id: 'tr-1',
+      transferNo: 'IST-001',
+      date: todayStr(-2),
+      fromShopId: 'shop-1',
+      fromShopName: demoShop.name,
+      toShopId: 'shop-1',
+      toShopName: 'Central Buffer Reserve',
+      productId: 'prod-1',
+      productName: 'MANJAL',
+      qty: 10,
+      unitLabel: 'Kg',
+      status: 'Received',
+      reason: 'Stock balancing audit record'
+    }
+  ];
+
+  const salesReturns: SalesReturnRecord[] = [
+    {
+      id: 'sr-1',
+      returnNo: 'SR-001',
+      originalBillNo: 'SH1-0110',
+      date: todayStr(-4),
+      shopId: 'shop-1',
+      shopName: demoShop.name,
+      customerName: 'M. Ibrahim',
+      amount: 980,
+      reason: 'Damaged outer pack exchanged'
+    }
+  ];
+
   return {
     shops: [demoShop],
     products,
@@ -695,6 +768,8 @@ function buildInitialSeedData(): AdminStoreData {
     purchases,
     expenses,
     allocations,
+    shopTransfers,
+    salesReturns,
     customerPayments,
     ownerWhatsapp: '9840048123'
   };
@@ -710,6 +785,14 @@ export function loadAdminStore(): AdminStoreData {
           const fresh = buildInitialSeedData();
           parsed.customerPayments = fresh.customerPayments;
           parsed.customers = fresh.customers;
+        }
+        if (!Array.isArray(parsed.shopTransfers)) {
+          const fresh = buildInitialSeedData();
+          parsed.shopTransfers = fresh.shopTransfers;
+        }
+        if (!Array.isArray(parsed.salesReturns)) {
+          const fresh = buildInitialSeedData();
+          parsed.salesReturns = fresh.salesReturns;
         }
         return parsed;
       }
@@ -875,4 +958,111 @@ export function buildDailyClosingWhatsAppMessage(store: AdminStoreData): string 
     `*Stock Alerts:* ${lowCount} Low Stock | ${outCount} Out of Stock`,
     `_Sent via Barakah Bepaar Admin HQ_`
   ].join('\n');
+}
+
+export function recordPosInvoiceToAdminStore(inv: Invoice, cashierUsername = 'SHOP1'): void {
+  const store = loadAdminStore();
+  const activeShop = store.shops[0];
+  const shopId = activeShop?.id || 'shop-1';
+
+  const lineItems: AdminBillLineItem[] = inv.items.map(it => {
+    const prod = store.products.find(p => p.id === it.product.id || p.code === it.product.code);
+    const cost = prod ? prod.purchasePrice : Number((it.rate * 0.78).toFixed(2));
+    return {
+      productId: prod?.id || it.product.id,
+      code: it.product.code,
+      name: it.product.name,
+      qty: it.quantity,
+      rate: it.rate,
+      cost,
+      total: it.lineValue
+    };
+  });
+
+  const costTotal = Number(lineItems.reduce((s, x) => s + x.cost * x.qty, 0).toFixed(2));
+  const totalQty = lineItems.reduce((s, x) => s + x.qty, 0);
+  const modeRaw = inv.payment.mode;
+  const paymentMode: AdminBill['paymentMode'] =
+    modeRaw === 'CARD' ? 'CARD' : modeRaw === 'CREDIT' ? 'CREDIT' : 'CASH';
+  const paidAmount = paymentMode === 'CREDIT' ? 0 : Math.min(inv.netAmount, inv.payment.paidAmount || inv.netAmount);
+  const pendingAmount = Math.max(0, inv.netAmount - paidAmount);
+
+  const newBill: AdminBill = {
+    id: inv.id,
+    billNo: `${activeShop?.code || 'SH1'}-${inv.invoiceNo}`,
+    shopId,
+    shopName: activeShop?.name || 'Barakah Main Store',
+    date: todayStr(0),
+    time: inv.time || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    customerCode: inv.customer.code,
+    customerName: inv.customer.name,
+    customerPhone: inv.customer.phone1,
+    cashier: cashierUsername,
+    itemsCount: inv.itemsCount,
+    totalQty,
+    categorySummary: lineItems[0]?.name || 'POS Retail',
+    grossAmount: inv.grossAmount,
+    discountAmount: inv.discountAmount,
+    costTotal,
+    netAmount: inv.netAmount,
+    paidAmount,
+    pendingAmount,
+    paymentMode,
+    status: pendingAmount > 0 ? 'Credit Pending' : 'Completed',
+    saleType: inv.rateType.toLowerCase().includes('wholesale') ? 'Wholesale' : 'Retail',
+    items: lineItems
+  };
+
+  // Deduct stock from matching shop & overall inventory
+  const nextProducts = store.products.map(p => {
+    const soldQty = lineItems.filter(l => l.productId === p.id).reduce((s, l) => s + l.qty, 0);
+    if (soldQty <= 0) return p;
+    const prevShopQty = p.shopStocks[shopId] ?? p.currentStock;
+    return {
+      ...p,
+      currentStock: Math.max(0, Number((p.currentStock - soldQty).toFixed(2))),
+      lastSoldDaysAgo: 0,
+      shopStocks: {
+        ...p.shopStocks,
+        [shopId]: Math.max(0, Number((prevShopQty - soldQty).toFixed(2)))
+      }
+    };
+  });
+
+  // Update customer balance if credit bill & non-walk-in
+  let nextCustomers = store.customers;
+  if (pendingAmount > 0 && inv.customer.code !== 'F1') {
+    const exists = store.customers.some(c => c.code === inv.customer.code);
+    if (exists) {
+      nextCustomers = store.customers.map(c =>
+        c.code === inv.customer.code
+          ? {
+              ...c,
+              balance: Number((c.balance + pendingAmount).toFixed(2)),
+              totalOrders: (c.totalOrders || 0) + 1,
+              totalSpent: (c.totalSpent || 0) + inv.netAmount
+            }
+          : c
+      );
+    } else {
+      nextCustomers = [
+        {
+          ...inv.customer,
+          balance: pendingAmount,
+          customerType: newBill.saleType,
+          creditLimit: 10000,
+          totalOrders: 1,
+          totalSpent: inv.netAmount
+        },
+        ...store.customers
+      ];
+    }
+  }
+
+  saveAdminStore({
+    ...store,
+    products: nextProducts,
+    customers: nextCustomers,
+    bills: [newBill, ...store.bills]
+  });
 }

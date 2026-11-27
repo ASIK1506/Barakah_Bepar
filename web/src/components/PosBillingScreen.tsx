@@ -3,6 +3,7 @@ import { Product, CartItem, Customer, PaymentDetails, Invoice, Estimation } from
 import { SEED_PRODUCTS, SEED_CUSTOMERS } from '../data/seedData';
 import { PaymentModal } from './PaymentModal';
 import { ThermalReceiptModal } from './ThermalReceiptModal';
+import { recordPosInvoiceToAdminStore } from '../lib/shopStore';
 import { CustomerSearchModal } from './CustomerSearchModal';
 import '../styles/classicTheme.css';
 
@@ -485,6 +486,7 @@ export const PosBillingScreen: React.FC<PosBillingScreenProps> = ({
 
     setLatestInvoice(newInv);
     setInvoicesHistory(prev => [newInv, ...prev]);
+    recordPosInvoiceToAdminStore(newInv);
     window.barakahFs?.appendTransaction({ type: 'INVOICE', ...newInv }).catch(() => {});
     window.barakahFs?.saveSnapshot(`invoice_${newInv.invoiceNo}`, newInv).catch(() => {});
 
