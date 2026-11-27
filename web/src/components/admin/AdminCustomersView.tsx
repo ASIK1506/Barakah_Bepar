@@ -22,12 +22,15 @@ import {
   exportRowsToCSV,
   collectCustomerUdharPayment
 } from '../../lib/shopStore';
+import { AdminNotifyFn, AdminConfirmFn } from './AdminNotifications';
 
 interface AdminCustomersViewProps {
   store: AdminStoreData;
   searchQuery: string;
   initialBillLookup?: string;
   onUpdateStore: (next: AdminStoreData) => void;
+  onNotify?: AdminNotifyFn;
+  onConfirm?: AdminConfirmFn;
 }
 
 /* Skywalk Severity Color Coding (>= 2000 Red, >= 500 Amber, < 500 Dark Orange) */
@@ -48,7 +51,9 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
   store,
   searchQuery,
   initialBillLookup,
-  onUpdateStore
+  onUpdateStore,
+  onNotify,
+  onConfirm
 }) => {
   const [subTab, setSubTab] = useState<'directory' | 'bill_lookup' | 'payments'>(
     initialBillLookup ? 'bill_lookup' : 'directory'
@@ -188,90 +193,108 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
     const due = Math.max(0, total - paid);
 
     if (!cust || !cust.phone1.trim()) {
-      alert('Walk-in Guard: Customer name and phone number are strictly required for Udhar sales!');
+      onNotify?.({
+        type: 'error',
+        title: 'Walk-in Guard Active',
+        message: 'Customer name and phone number are strictly required for Udhar sales!'
+      });
       return;
     }
     if (total <= 0 || due <= 0) {
-      alert('Pending Udhar must be greater than ₹0.');
+      onNotify?.({
+        type: 'warning',
+        title: 'Invalid Udhar Amount',
+        message: 'Pending Udhar balance must be greater than ₹0.'
+      });
       return;
     }
-    if (cust.creditLimit && cust.balance + due > cust.creditLimit) {
-      if (
-        !window.confirm(
-          `Credit Limit Warning: ${cust.name}'s new balance (${formatINR(cust.balance + due)}) exceeds limit (${formatINR(cust.creditLimit)}). Proceed anyway?`
-        )
-      ) {
-        return;
-      }
-    }
 
-    const nextSeq = 119 + store.bills.length;
-    const now = new Date();
-    const newBill: AdminBill = {
-      id: `b-${Date.now()}`,
-      billNo: `SH1-0${nextSeq}`,
-      shopId: store.shops[0]?.id || 'shop-1',
-      shopName: store.shops[0]?.name || 'Barakah Main Store',
-      date: now.toISOString().slice(0, 10),
-      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      customerCode: cust.code,
-      customerName: cust.name,
-      customerPhone: cust.phone1,
-      cashier: 'ADMIN',
-      itemsCount: 3,
-      totalQty: 5,
-      categorySummary: cust.customerType === 'Wholesale' ? 'Wholesale Supply' : 'Groceries',
-      grossAmount: total,
-      discountAmount: 0,
-      costTotal: Math.round(total * 0.78),
-      netAmount: total,
-      paidAmount: paid,
-      pendingAmount: due,
-      paymentMode: paid > 0 ? udharPayMethod : 'CREDIT',
-      status: 'Credit Pending',
-      saleType: cust.customerType || 'Retail'
+    const commitUdharBill = () => {
+      const nextSeq = 119 + store.bills.length;
+      const now = new Date();
+      const newBill: AdminBill = {
+        id: `b-${Date.now()}`,
+        billNo: `SH1-0${nextSeq}`,
+        shopId: store.shops[0]?.id || 'shop-1',
+        shopName: store.shops[0]?.name || 'Barakah Main Store',
+        date: now.toISOString().slice(0, 10),
+        time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        customerCode: cust.code,
+        customerName: cust.name,
+        customerPhone: cust.phone1,
+        cashier: 'ADMIN',
+        itemsCount: 3,
+        totalQty: 5,
+        categorySummary: cust.customerType === 'Wholesale' ? 'Wholesale Supply' : 'Groceries',
+        grossAmount: total,
+        discountAmount: 0,
+        costTotal: Math.round(total * 0.78),
+        netAmount: total,
+        paidAmount: paid,
+        pendingAmount: due,
+        paymentMode: paid > 0 ? udharPayMethod : 'CREDIT',
+        status: 'Credit Pending',
+        saleType: cust.customerType || 'Retail'
+      };
+
+      const nextCustomers = store.customers.map(c =>
+        c.code === cust.code
+          ? {
+              ...c,
+              balance: c.balance + due,
+              totalOrders: (c.totalOrders || 0) + 1,
+              totalSpent: (c.totalSpent || 0) + total,
+              previousPurchase: newBill.date
+            }
+          : c
+      );
+
+      const nextPayments =
+        paid > 0
+          ? [
+              {
+                id: `cpay-${Date.now()}`,
+                date: newBill.date,
+                time: newBill.time,
+                customerCode: cust.code,
+                customerName: cust.name,
+                customerPhone: cust.phone1,
+                billNo: newBill.billNo,
+                amount: paid,
+                method: udharPayMethod,
+                balanceAfter: cust.balance + due,
+                note: 'Upfront partial payment on Udhar bill'
+              },
+              ...paymentsLog
+            ]
+          : paymentsLog;
+
+      onUpdateStore({
+        ...store,
+        customers: nextCustomers,
+        bills: [newBill, ...store.bills],
+        customerPayments: nextPayments
+      });
+      setNewUdharOpen(false);
+      onNotify?.({
+        type: 'success',
+        title: `${paid > 0 ? 'Partial' : 'Udhar'} Bill ${newBill.billNo} Recorded`,
+        message: `Added to ${cust.name}'s Khata ledger.`,
+        meta: `Pending Balance: ${formatINR(due)} · New Account Due: ${formatINR(cust.balance + due)}`
+      });
     };
 
-    const nextCustomers = store.customers.map(c =>
-      c.code === cust.code
-        ? {
-            ...c,
-            balance: c.balance + due,
-            totalOrders: (c.totalOrders || 0) + 1,
-            totalSpent: (c.totalSpent || 0) + total,
-            previousPurchase: newBill.date
-          }
-        : c
-    );
+    if (cust.creditLimit && cust.balance + due > cust.creditLimit && onConfirm) {
+      onConfirm({
+        title: 'Credit Limit Warning',
+        message: `${cust.name}'s new balance (${formatINR(cust.balance + due)}) exceeds their credit limit (${formatINR(cust.creditLimit)}). Proceed anyway?`,
+        confirmLabel: 'Proceed Anyway',
+        onConfirm: commitUdharBill
+      });
+      return;
+    }
 
-    const nextPayments =
-      paid > 0
-        ? [
-            {
-              id: `cpay-${Date.now()}`,
-              date: newBill.date,
-              time: newBill.time,
-              customerCode: cust.code,
-              customerName: cust.name,
-              customerPhone: cust.phone1,
-              billNo: newBill.billNo,
-              amount: paid,
-              method: udharPayMethod,
-              balanceAfter: cust.balance + due,
-              note: 'Upfront partial payment on Udhar bill'
-            },
-            ...paymentsLog
-          ]
-        : paymentsLog;
-
-    onUpdateStore({
-      ...store,
-      customers: nextCustomers,
-      bills: [newBill, ...store.bills],
-      customerPayments: nextPayments
-    });
-    setNewUdharOpen(false);
-    alert(`Created ${paid > 0 ? 'Partial' : 'Udhar'} Bill ${newBill.billNo} — Pending: ${formatINR(due)}`);
+    commitUdharBill();
   };
 
   const handleSendWhatsAppReminder = (c: AdminCustomer) => {

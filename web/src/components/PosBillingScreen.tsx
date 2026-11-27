@@ -3,7 +3,11 @@ import { Product, CartItem, Customer, PaymentDetails, Invoice, Estimation } from
 import { SEED_PRODUCTS, SEED_CUSTOMERS } from '../data/seedData';
 import { PaymentModal } from './PaymentModal';
 import { ThermalReceiptModal } from './ThermalReceiptModal';
-import { recordPosInvoiceToAdminStore } from '../lib/shopStore';
+import {
+  recordPosInvoiceToAdminStore,
+  getSharedProductsForPos,
+  getSharedCustomersForPos
+} from '../lib/shopStore';
 import { CustomerSearchModal } from './CustomerSearchModal';
 import '../styles/classicTheme.css';
 
@@ -26,10 +30,10 @@ export const PosBillingScreen: React.FC<PosBillingScreenProps> = ({
   onToggleMaximize,
   onCloseWindow
 }) => {
-  // Data
-  const [products, setProducts] = useState<Product[]>(SEED_PRODUCTS);
-  const [customers, setCustomers] = useState<Customer[]>(SEED_CUSTOMERS);
-  const [activeCustomer, setActiveCustomer] = useState<Customer>(SEED_CUSTOMERS[0]); // Default F1 Cash
+  // Data (two-way synced with Admin HQ store)
+  const [products, setProducts] = useState<Product[]>(() => getSharedProductsForPos());
+  const [customers, setCustomers] = useState<Customer[]>(() => getSharedCustomersForPos());
+  const [activeCustomer, setActiveCustomer] = useState<Customer>(() => getSharedCustomersForPos()[0] || SEED_CUSTOMERS[0]); // Default F1 Cash
 
   // Checkboxes matching reference (Slide 30 / 1000x1000.webp)
   const [isGstEnabled, setIsGstEnabled] = useState(true);

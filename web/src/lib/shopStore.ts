@@ -1,5 +1,5 @@
 import { SEED_PRODUCTS, SEED_CUSTOMERS } from '../data/seedData';
-import { Customer, Invoice } from '../types';
+import { Customer, Invoice, Product } from '../types';
 
 export interface ShopProfile {
   id: string;
@@ -171,6 +171,66 @@ export interface CustomerPaymentRecord {
   note: string;
 }
 
+export interface AdminCategory {
+  id: string;
+  code: string;
+  name: string;
+  tamilName: string;
+  description: string;
+}
+
+export interface AdminTaxSlab {
+  id: string;
+  name: string;
+  cgst: number;
+  sgst: number;
+  cess: number;
+}
+
+export interface CompanyProfile {
+  name: string;
+  address: string;
+  phone: string;
+  gstin: string;
+  receiptFooter: string;
+}
+
+export interface PurchaseReturnRecord {
+  id: string;
+  returnNo: string;
+  originalInvoiceNo: string;
+  date: string;
+  vendorId: string;
+  vendorName: string;
+  productId: string;
+  productName: string;
+  qty: number;
+  amount: number;
+  reason: string;
+}
+
+export interface VendorPaymentRecord {
+  id: string;
+  date: string;
+  vendorId: string;
+  vendorName: string;
+  amount: number;
+  method: 'CASH' | 'UPI' | 'BANK';
+  balanceAfter: number;
+  note: string;
+}
+
+export interface CashDenominationLog {
+  id: string;
+  date: string;
+  cashier: string;
+  notesTotal: number;
+  paidIn: number;
+  paidOut: number;
+  closingNet: number;
+  note: string;
+}
+
 export interface AdminCustomer extends Customer {
   customerType?: 'Retail' | 'Wholesale';
   creditLimit?: number;
@@ -190,6 +250,12 @@ export interface AdminStoreData {
   shopTransfers?: ShopTransferRecord[];
   salesReturns?: SalesReturnRecord[];
   customerPayments?: CustomerPaymentRecord[];
+  categories?: AdminCategory[];
+  taxSlabs?: AdminTaxSlab[];
+  company?: CompanyProfile;
+  purchaseReturns?: PurchaseReturnRecord[];
+  vendorPayments?: VendorPaymentRecord[];
+  denominationLogs?: CashDenominationLog[];
   ownerWhatsapp: string;
 }
 
@@ -759,6 +825,74 @@ function buildInitialSeedData(): AdminStoreData {
     }
   ];
 
+  const categories: AdminCategory[] = [
+    { id: 'cat-1', code: 'CAT-01', name: 'Spices & Masala', tamilName: 'மசாலா பொருட்கள்', description: 'Whole & ground spices' },
+    { id: 'cat-2', code: 'CAT-02', name: 'Packed Spices', tamilName: 'பாக்கெட் மசாலா', description: 'Retail spice sachets & packs' },
+    { id: 'cat-3', code: 'CAT-03', name: 'Grains & Staples', tamilName: 'தானியங்கள்', description: 'Wheat, rice, bulk bags' },
+    { id: 'cat-4', code: 'CAT-04', name: 'Pulses & Dal', tamilName: 'பருப்பு வகைகள்', description: 'Toor, urad & lentils' },
+    { id: 'cat-5', code: 'CAT-05', name: 'Groceries', tamilName: 'மளிகை பொருட்கள்', description: 'Daily household groceries' },
+    { id: 'cat-6', code: 'CAT-06', name: 'Health Drinks', tamilName: 'ஆரோக்கிய பானங்கள்', description: 'Beverages & health mixes' },
+    { id: 'cat-7', code: 'CAT-07', name: 'Personal Care', tamilName: 'சுய பராமரிப்பு', description: 'Soaps, cosmetics & hygiene' }
+  ];
+
+  const taxSlabs: AdminTaxSlab[] = [
+    { id: 'TAX-0', name: 'GST 0% (Exempt)', cgst: 0, sgst: 0, cess: 0 },
+    { id: 'TAX-5', name: 'GST 5% (2.5% + 2.5%)', cgst: 2.5, sgst: 2.5, cess: 0 },
+    { id: 'TAX-12', name: 'GST 12% (6% + 6%)', cgst: 6, sgst: 6, cess: 0 },
+    { id: 'TAX-18', name: 'GST 18% (9% + 9%)', cgst: 9, sgst: 9, cess: 0 },
+    { id: 'TAX-28', name: 'GST 28% (14% + 14%)', cgst: 14, sgst: 14, cess: 0 }
+  ];
+
+  const company: CompanyProfile = {
+    name: 'Barakah Bepaar Retail & Wholesale',
+    address: 'No. 42, Broadway Main Road, Chennai - 600108',
+    phone: '98400 48123',
+    gstin: '33AAACB1234F1Z5',
+    receiptFooter: 'Thank you for shopping at Barakah Bepaar! நன்றி! மீண்டும் வருக!'
+  };
+
+  const purchaseReturns: PurchaseReturnRecord[] = [
+    {
+      id: 'pret-1',
+      returnNo: 'PR-001',
+      originalInvoiceNo: 'PINV-089',
+      date: todayStr(-1),
+      vendorId: 'v-2',
+      vendorName: 'Salem Agro Grains & Pulses',
+      productId: 'prod-wheat-100',
+      productName: 'WHEAT SAMBA (BULK)',
+      qty: 10,
+      amount: 480,
+      reason: '10 Kg damaged sack returned to supplier'
+    }
+  ];
+
+  const vendorPayments: VendorPaymentRecord[] = [
+    {
+      id: 'vpay-1',
+      date: todayStr(-2),
+      vendorId: 'v-2',
+      vendorName: 'Salem Agro Grains & Pulses',
+      amount: 12000,
+      method: 'BANK',
+      balanceAfter: 11500,
+      note: 'Partial payment against PINV-089'
+    }
+  ];
+
+  const denominationLogs: CashDenominationLog[] = [
+    {
+      id: 'denom-1',
+      date: todayStr(-1),
+      cashier: 'SHOP1',
+      notesTotal: 14500,
+      paidIn: 500,
+      paidOut: 850,
+      closingNet: 14150,
+      note: 'Evening drawer tally matched'
+    }
+  ];
+
   return {
     shops: [demoShop],
     products,
@@ -771,6 +905,12 @@ function buildInitialSeedData(): AdminStoreData {
     shopTransfers,
     salesReturns,
     customerPayments,
+    categories,
+    taxSlabs,
+    company,
+    purchaseReturns,
+    vendorPayments,
+    denominationLogs,
     ownerWhatsapp: '9840048123'
   };
 }
@@ -781,19 +921,19 @@ export function loadAdminStore(): AdminStoreData {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.shops) && parsed.shops.length > 0) {
+        const fresh = buildInitialSeedData();
         if (!Array.isArray(parsed.customerPayments)) {
-          const fresh = buildInitialSeedData();
           parsed.customerPayments = fresh.customerPayments;
           parsed.customers = fresh.customers;
         }
-        if (!Array.isArray(parsed.shopTransfers)) {
-          const fresh = buildInitialSeedData();
-          parsed.shopTransfers = fresh.shopTransfers;
-        }
-        if (!Array.isArray(parsed.salesReturns)) {
-          const fresh = buildInitialSeedData();
-          parsed.salesReturns = fresh.salesReturns;
-        }
+        if (!Array.isArray(parsed.shopTransfers)) parsed.shopTransfers = fresh.shopTransfers;
+        if (!Array.isArray(parsed.salesReturns)) parsed.salesReturns = fresh.salesReturns;
+        if (!Array.isArray(parsed.categories)) parsed.categories = fresh.categories;
+        if (!Array.isArray(parsed.taxSlabs)) parsed.taxSlabs = fresh.taxSlabs;
+        if (!parsed.company) parsed.company = fresh.company;
+        if (!Array.isArray(parsed.purchaseReturns)) parsed.purchaseReturns = fresh.purchaseReturns;
+        if (!Array.isArray(parsed.vendorPayments)) parsed.vendorPayments = fresh.vendorPayments;
+        if (!Array.isArray(parsed.denominationLogs)) parsed.denominationLogs = fresh.denominationLogs;
         return parsed;
       }
     }
@@ -1065,4 +1205,51 @@ export function recordPosInvoiceToAdminStore(inv: Invoice, cashierUsername = 'SH
     customers: nextCustomers,
     bills: [newBill, ...store.bills]
   });
+}
+
+/* Two-way Sync Helpers: Let Classic Shop POS read Admin-created Products, Rates, Stock & Customers */
+export function getSharedProductsForPos(): Product[] {
+  const store = loadAdminStore();
+  const activeShopId = store.shops[0]?.id || 'shop-1';
+  const seedMap = new Map(SEED_PRODUCTS.map(p => [p.id, p]));
+
+  return store.products.map(p => {
+    const seed = seedMap.get(p.id);
+    const shopQty = p.shopStocks?.[activeShopId] ?? p.currentStock;
+    return {
+      id: p.id,
+      code: p.code,
+      name: p.name,
+      tamilName: p.tamilName || p.name,
+      mrp: p.mrp,
+      rate: p.rate,
+      wholesaleRate: p.wholesaleRate,
+      branchRate: p.branchRate,
+      unit: p.unit,
+      isDecimal: seed ? seed.isDecimal : p.unit.toLowerCase() === 'kg',
+      isWeighingMachine: seed ? seed.isWeighingMachine : p.unit.toLowerCase() === 'kg',
+      taxSlabId: seed ? seed.taxSlabId : 'TAX-5',
+      barcode: p.barcode || `89010000${p.code}`,
+      currentStock: shopQty
+    };
+  });
+}
+
+export function getSharedCustomersForPos(): Customer[] {
+  const store = loadAdminStore();
+  const byCode = new Map<string, Customer>();
+  SEED_CUSTOMERS.forEach(c => byCode.set(c.code.toUpperCase(), c));
+  store.customers.forEach(c => {
+    byCode.set(c.code.toUpperCase(), {
+      code: c.code,
+      name: c.name,
+      tamilName: c.tamilName,
+      phone1: c.phone1,
+      phone2: c.phone2,
+      balance: c.balance,
+      previousPurchase: c.previousPurchase,
+      points: c.points
+    });
+  });
+  return Array.from(byCode.values());
 }

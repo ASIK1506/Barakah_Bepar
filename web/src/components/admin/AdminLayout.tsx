@@ -12,10 +12,10 @@ import {
   Bell,
   Sun,
   Moon,
-  ArrowLeft,
   UsersRound,
   Smartphone,
-  X
+  X,
+  Database
 } from 'lucide-react';
 import barakahIcon from '../../assets/barakah-icon.png';
 import {
@@ -37,7 +37,16 @@ import {
   AdminSettingsView
 } from './AdminViews';
 import { AdminCustomersView } from './AdminCustomersView';
+import { AdminMastersView } from './AdminMastersView';
 import { StockAlertDrawer } from './StockAlertDrawer';
+import {
+  AdminToastItem,
+  AdminConfirmRequest,
+  DispatchSlipData,
+  AdminToastViewport,
+  AdminConfirmModal,
+  DispatchSlipModal
+} from './AdminNotifications';
 import './AdminTheme.css';
 
 interface AdminLayoutProps {
@@ -46,7 +55,7 @@ interface AdminLayoutProps {
   onPreviewClassicPos: () => void;
 }
 
-type AdminTab = 'dashboard' | 'inventory' | 'orders' | 'purchase' | 'customers' | 'reporting' | 'shops' | 'settings';
+type AdminTab = 'dashboard' | 'inventory' | 'masters' | 'orders' | 'purchase' | 'customers' | 'reporting' | 'shops' | 'settings';
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
   currentUser,
@@ -62,6 +71,21 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const [selectedBillLookup, setSelectedBillLookup] = useState<string | undefined>(undefined);
   const [reorderProductId, setReorderProductId] = useState<string | undefined>(undefined);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+  const [toasts, setToasts] = useState<AdminToastItem[]>([]);
+  const [confirmReq, setConfirmReq] = useState<AdminConfirmRequest | null>(null);
+  const [dispatchSlip, setDispatchSlip] = useState<DispatchSlipData | null>(null);
+
+  const handleNotify = (toast: Omit<AdminToastItem, 'id'>) => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    setToasts(prev => [{ id, ...toast }, ...prev].slice(0, 4));
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5200);
+  };
+
+  const handleConfirm = (req: AdminConfirmRequest) => {
+    setConfirmReq(req);
+  };
 
   const handleUpdateStore = (next: AdminStoreData) => {
     setStore(next);
@@ -95,6 +119,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const navItems: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={17} /> },
     { id: 'inventory', label: 'Inventory', icon: <Package size={17} /> },
+    { id: 'masters', label: 'Masters & Till', icon: <Database size={17} /> },
     { id: 'orders', label: 'Orders', icon: <Layers size={17} /> },
     { id: 'purchase', label: 'Purchase', icon: <ShoppingCart size={17} /> },
     { id: 'customers', label: 'Customers & Udhar', icon: <UsersRound size={17} /> },
@@ -147,12 +172,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           </nav>
         </div>
 
-        {/* Bottom Logout */}
+        {/* Bottom Logout (Shop POS View moved to Settings so Admin stays in Modern UI) */}
         <div className="bb-sidebar-footer">
-          <button className="bb-logout-btn" onClick={onPreviewClassicPos} title="View unchanged Classic POS">
-            <ArrowLeft size={16} />
-            <span>Shop POS View</span>
-          </button>
           <button className="bb-logout-btn" onClick={onLogOff}>
             <LogOut size={16} />
             <span>Logout</span>
@@ -265,7 +286,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           )}
 
           {activeTab === 'shops' && (
-            <AdminShopsView store={store} onUpdateStore={handleUpdateStore} />
+            <AdminShopsView
+              store={store}
+              onUpdateStore={handleUpdateStore}
+              onNotify={handleNotify}
+              onOpenDispatchSlip={setDispatchSlip}
+            />
           )}
 
           {activeTab === 'inventory' && (
@@ -273,6 +299,16 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               store={store}
               searchQuery={searchQuery}
               onUpdateStore={handleUpdateStore}
+              onNotify={handleNotify}
+            />
+          )}
+
+          {activeTab === 'masters' && (
+            <AdminMastersView
+              store={store}
+              searchQuery={searchQuery}
+              onUpdateStore={handleUpdateStore}
+              onNotify={handleNotify}
             />
           )}
 
@@ -282,6 +318,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               searchQuery={searchQuery}
               initialBillLookup={selectedBillLookup}
               onUpdateStore={handleUpdateStore}
+              onNotify={handleNotify}
+              onConfirm={handleConfirm}
             />
           )}
 
@@ -290,6 +328,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               store={store}
               initialProductId={reorderProductId}
               onUpdateStore={handleUpdateStore}
+              onNotify={handleNotify}
             />
           )}
 
@@ -299,6 +338,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               searchQuery={searchQuery}
               initialBillLookup={selectedBillLookup}
               onUpdateStore={handleUpdateStore}
+              onNotify={handleNotify}
+              onConfirm={handleConfirm}
             />
           )}
 
@@ -310,6 +351,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               onUpdateStore={handleUpdateStore}
               onResetDemoData={handleResetDemo}
               onPreviewClassicPos={onPreviewClassicPos}
+              onNotify={handleNotify}
+              onConfirm={handleConfirm}
             />
           )}
         </main>
@@ -393,6 +436,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           </div>
         </div>
       )}
+
+      {/* Branded Toast, Confirm Dialog & Dispatch Slip Print Modal */}
+      <AdminToastViewport
+        toasts={toasts}
+        onDismiss={id => setToasts(prev => prev.filter(t => t.id !== id))}
+      />
+      <AdminConfirmModal request={confirmReq} onCancel={() => setConfirmReq(null)} />
+      <DispatchSlipModal slip={dispatchSlip} onClose={() => setDispatchSlip(null)} />
     </div>
   );
 };

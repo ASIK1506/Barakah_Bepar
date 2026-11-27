@@ -28,8 +28,16 @@ import {
   exportRowsToCSV,
   buildDailyClosingWhatsAppMessage
 } from '../../lib/shopStore';
-import { loadUsers, saveUsers, UserAccount } from '../../lib/userStore';
+import {
+  loadUsers,
+  saveUsers,
+  UserAccount,
+  getPermissionsForUser,
+  savePermissionsForUser,
+  UserPermissions
+} from '../../lib/userStore';
 import { TurnoverSplineChart, AccuracyGaugeChart } from './AdminCharts';
+import { AdminNotifyFn, AdminConfirmFn, DispatchSlipData } from './AdminNotifications';
 
 /* ============================================================================
    1. SHOPS & BRANCH ALLOCATION VIEW (1 Pre-seeded Shop, Max 5 Shops)
@@ -37,7 +45,9 @@ import { TurnoverSplineChart, AccuracyGaugeChart } from './AdminCharts';
 export const AdminShopsView: React.FC<{
   store: AdminStoreData;
   onUpdateStore: (next: AdminStoreData) => void;
-}> = ({ store, onUpdateStore }) => {
+  onNotify?: AdminNotifyFn;
+  onOpenDispatchSlip?: (slip: DispatchSlipData) => void;
+}> = ({ store, onUpdateStore, onNotify, onOpenDispatchSlip }) => {
   const [newName, setNewName] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -94,18 +104,28 @@ export const AdminShopsView: React.FC<{
     const shop = store.shops.find(s => s.id === allocShopId);
     if (!prod || !shop) return;
     if (qty > prod.centralStock) {
-      alert(`Insufficient central stock! Available: ${prod.centralStock} ${prod.unit}`);
+      onNotify?.({
+        type: 'error',
+        title: 'Insufficient Central Stock',
+        message: `Requested ${qty} ${prod.unit}, but only ${prod.centralStock} ${prod.unit} available in Central Warehouse.`
+      });
       return;
     }
 
+    const prevCentral = prod.centralStock;
+    const prevShopQty = prod.shopStocks[shop.id] || 0;
+    const nextCentral = prevCentral - qty;
+    const nextShopQty = prevShopQty + qty;
+    const refNo = `ALLOC-${String(store.allocations.length + 101)}`;
+    const today = new Date().toISOString().slice(0, 10);
+
     const updatedProducts = store.products.map(p => {
       if (p.id !== prod.id) return p;
-      const prevShopQty = p.shopStocks[shop.id] || 0;
       return {
         ...p,
-        centralStock: p.centralStock - qty,
+        centralStock: nextCentral,
         currentStock: p.currentStock + qty,
-        shopStocks: { ...p.shopStocks, [shop.id]: prevShopQty + qty }
+        shopStocks: { ...p.shopStocks, [shop.id]: nextShopQty }
       };
     });
 
@@ -115,7 +135,7 @@ export const AdminShopsView: React.FC<{
       allocations: [
         {
           id: `alloc-${Date.now()}`,
-          date: new Date().toISOString().slice(0, 10),
+          date: today,
           fromLocation: 'Central Warehouse',
           toShopId: shop.id,
           toShopName: shop.name,
@@ -128,7 +148,41 @@ export const AdminShopsView: React.FC<{
         ...store.allocations
       ]
     });
-    alert(`Allocated ${qty} ${prod.unit} of ${prod.name} to ${shop.name}!`);
+
+    const slip: DispatchSlipData = {
+      refNo,
+      date: today,
+      fromLocation: 'HQ Central Warehouse',
+      toLocation: `${shop.code} · ${shop.name}`,
+      productName: prod.name,
+      qty,
+      unit: prod.unit,
+      beforeFrom: prevCentral,
+      afterFrom: nextCentral,
+      beforeTo: prevShopQty,
+      afterTo: nextShopQty,
+      note: 'Admin HQ stock allocation'
+    };
+
+    onNotify?.({
+      type: 'success',
+      title: `Stock Allocated to ${shop.code}`,
+      message: `${qty} ${prod.unit} of ${prod.name} moved to ${shop.name}.`,
+      meta: `Central: ${prevCentral} → ${nextCentral} ${prod.unit}  |  ${shop.code}: ${prevShopQty} → ${nextShopQty} ${prod.unit}`,
+      action: onOpenDispatchSlip
+        ? { label: 'Print Dispatch Slip', icon: 'print', onClick: () => onOpenDispatchSlip(slip) }
+        : undefined,
+      secondaryAction: {
+        label: 'WhatsApp Shop',
+        icon: 'whatsapp',
+        onClick: () => {
+          const msg = encodeURIComponent(
+            `*Barakah HQ Stock Allocation (${refNo})*\nShop: ${shop.name}\nItem: ${prod.name}\nQty Issued: *${qty} ${prod.unit}*\nNew Shop Stock: ${nextShopQty} ${prod.unit}`
+          );
+          window.open(`https://wa.me/?text=${msg}`, '_blank');
+        }
+      }
+    });
   };
 
   const handleShopToShopTransfer = (e: React.FormEvent) => {
@@ -136,7 +190,11 @@ export const AdminShopsView: React.FC<{
     const qty = Number(trQty);
     if (!qty || qty <= 0) return;
     if (trFromShopId === trToShopId) {
-      alert('Add a 2nd branch above first, or select a different destination shop for Shop-to-Shop transfer.');
+      onNotify?.({
+        type: 'warning',
+        title: 'Same Source & Destination',
+        message: 'Add a 2nd branch above first, or choose two different shops for inter-branch transfer.'
+      });
       return;
     }
     const prod = store.products.find(p => p.id === trProductId);
@@ -145,20 +203,27 @@ export const AdminShopsView: React.FC<{
     if (!prod || !fromShop || !toShop) return;
     const avail = prod.shopStocks[fromShop.id] ?? prod.currentStock;
     if (qty > avail) {
-      alert(`Insufficient stock at ${fromShop.name}! Available: ${avail} ${prod.unit}`);
+      onNotify?.({
+        type: 'error',
+        title: `Insufficient Stock at ${fromShop.code}`,
+        message: `Available at ${fromShop.name}: ${avail} ${prod.unit}.`
+      });
       return;
     }
 
+    const srcPrev = prod.shopStocks[fromShop.id] ?? prod.currentStock;
+    const dstPrev = prod.shopStocks[toShop.id] ?? 0;
+    const srcAfter = Math.max(0, srcPrev - qty);
+    const dstAfter = dstPrev + qty;
+
     const updatedProducts = store.products.map(p => {
       if (p.id !== prod.id) return p;
-      const srcPrev = p.shopStocks[fromShop.id] ?? p.currentStock;
-      const dstPrev = p.shopStocks[toShop.id] ?? 0;
       return {
         ...p,
         shopStocks: {
           ...p.shopStocks,
-          [fromShop.id]: Math.max(0, srcPrev - qty),
-          [toShop.id]: dstPrev + qty
+          [fromShop.id]: srcAfter,
+          [toShop.id]: dstAfter
         }
       };
     });
@@ -184,7 +249,31 @@ export const AdminShopsView: React.FC<{
       products: updatedProducts,
       shopTransfers: [newTransfer, ...(store.shopTransfers || [])]
     });
-    alert(`Transfer ${newTransfer.transferNo} dispatched: ${qty} ${prod.unit} from ${fromShop.code} -> ${toShop.code}`);
+
+    const slip: DispatchSlipData = {
+      refNo: newTransfer.transferNo,
+      date: newTransfer.date,
+      fromLocation: `${fromShop.code} · ${fromShop.name}`,
+      toLocation: `${toShop.code} · ${toShop.name}`,
+      productName: prod.name,
+      qty,
+      unit: prod.unit,
+      beforeFrom: srcPrev,
+      afterFrom: srcAfter,
+      beforeTo: dstPrev,
+      afterTo: dstAfter,
+      note: newTransfer.reason
+    };
+
+    onNotify?.({
+      type: 'success',
+      title: `Transfer ${newTransfer.transferNo} Dispatched`,
+      message: `${qty} ${prod.unit} ${prod.name}: ${fromShop.code} → ${toShop.code}`,
+      meta: `${fromShop.code}: ${srcPrev} → ${srcAfter} ${prod.unit}  |  ${toShop.code}: ${dstPrev} → ${dstAfter} ${prod.unit}`,
+      action: onOpenDispatchSlip
+        ? { label: 'Print Transfer Slip', icon: 'print', onClick: () => onOpenDispatchSlip(slip) }
+        : undefined
+    });
   };
 
   const handleMarkTransferReceived = (trId: string) => {
@@ -490,12 +579,16 @@ export const AdminInventoryView: React.FC<{
   store: AdminStoreData;
   searchQuery: string;
   onUpdateStore: (next: AdminStoreData) => void;
-}> = ({ store, searchQuery, onUpdateStore }) => {
+  onNotify?: AdminNotifyFn;
+}> = ({ store, searchQuery, onUpdateStore, onNotify }) => {
   const [editingRatesProd, setEditingRatesProd] = useState<AdminProduct | null>(null);
   const [newTierLabel, setNewTierLabel] = useState('');
   const [newTierRate, setNewTierRate] = useState('');
   const [shopFilter, setShopFilter] = useState<string>('all');
   const [lowStockOnly, setLowStockOnly] = useState<boolean>(false);
+  const [adjustProd, setAdjustProd] = useState<AdminProduct | null>(null);
+  const [adjustDelta, setAdjustDelta] = useState('10');
+  const [adjustReason, setAdjustReason] = useState('Physical Stock Audit / Repack');
 
   const totalStockValue = store.products.reduce((s, p) => s + p.rate * p.currentStock, 0);
   const totalProfitEstimate = Math.round(totalStockValue * 0.22);
@@ -664,13 +757,25 @@ export const AdminInventoryView: React.FC<{
                 </td>
                 <td style={{ fontWeight: 600 }}>{formatINR(displayQty * p.rate)}</td>
                 <td>
-                  <button
-                    className="bb-btn-outline"
-                    style={{ padding: '4px 10px', fontSize: 12 }}
-                    onClick={() => setEditingRatesProd(p)}
-                  >
-                    <Tag size={12} /> {p.extraRates.length} Rates ({formatINR(p.rate)})
-                  </button>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button
+                      className="bb-btn-outline"
+                      style={{ padding: '4px 10px', fontSize: 12 }}
+                      onClick={() => setEditingRatesProd(p)}
+                    >
+                      <Tag size={12} /> {p.extraRates.length} Rates ({formatINR(p.rate)})
+                    </button>
+                    <button
+                      className="bb-btn-outline"
+                      style={{ padding: '4px 9px', fontSize: 12 }}
+                      onClick={() => {
+                        setAdjustProd(p);
+                        setAdjustDelta('10');
+                      }}
+                    >
+                      Adjust / Repack
+                    </button>
+                  </div>
                 </td>
               </tr>
               );
@@ -678,6 +783,74 @@ export const AdminInventoryView: React.FC<{
           </tbody>
         </table>
       </div>
+
+      {/* Physical Stock Adjustment / Bulk Repack Modal (replaces Old Stock Update / Conversion) */}
+      {adjustProd && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 75 }}
+          onClick={() => setAdjustProd(null)}
+        >
+          <div className="bb-card" style={{ width: 'min(440px, 92vw)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Stock Adjustment / Repack: {adjustProd.name}</h3>
+              <button onClick={() => setAdjustProd(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 12 }}>
+              Current Shop Stock: <strong>{adjustProd.currentStock} {adjustProd.unit}</strong> · Central: <strong>{adjustProd.centralStock} {adjustProd.unit}</strong>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600 }}>Quantity Delta (+ to add/repack, - to deduct damaged)</label>
+                <input
+                  type="number"
+                  value={adjustDelta}
+                  onChange={e => setAdjustDelta(e.target.value)}
+                  style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600 }}>Reason / Repack Note</label>
+                <input
+                  value={adjustReason}
+                  onChange={e => setAdjustReason(e.target.value)}
+                  style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 6 }}>
+                <button className="bb-btn-outline" onClick={() => setAdjustProd(null)}>Cancel</button>
+                <button
+                  className="bb-btn-primary"
+                  onClick={() => {
+                    const delta = Number(adjustDelta) || 0;
+                    if (delta === 0) return;
+                    const shopId = shopFilter === 'all' ? (store.shops[0]?.id || 'shop-1') : shopFilter;
+                    const nextQty = Math.max(0, adjustProd.currentStock + delta);
+                    const nextProducts = store.products.map(pr =>
+                      pr.id === adjustProd.id
+                        ? {
+                            ...pr,
+                            currentStock: nextQty,
+                            shopStocks: { ...pr.shopStocks, [shopId]: Math.max(0, (pr.shopStocks[shopId] ?? pr.currentStock) + delta) }
+                          }
+                        : pr
+                    );
+                    onUpdateStore({ ...store, products: nextProducts });
+                    onNotify?.({
+                      type: 'success',
+                      title: 'Inventory Stock Updated',
+                      message: `${adjustProd.name}: ${adjustProd.currentStock} → ${nextQty} ${adjustProd.unit}`,
+                      meta: adjustReason
+                    });
+                    setAdjustProd(null);
+                  }}
+                >
+                  Apply Adjustment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Multi-Rate Modal */}
       {editingRatesProd && (
@@ -759,7 +932,9 @@ export const AdminOrdersView: React.FC<{
   searchQuery: string;
   initialBillLookup?: string;
   onUpdateStore: (next: AdminStoreData) => void;
-}> = ({ store, searchQuery, initialBillLookup, onUpdateStore }) => {
+  onNotify?: AdminNotifyFn;
+  onConfirm?: AdminConfirmFn;
+}> = ({ store, searchQuery, initialBillLookup, onUpdateStore, onNotify, onConfirm }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'summary' | 'completed' | 'credit' | 'cancelled'>('all');
   const [billLookupInput, setBillLookupInput] = useState(initialBillLookup || '');
   const [payAmountInput, setPayAmountInput] = useState('');
@@ -831,25 +1006,43 @@ export const AdminOrdersView: React.FC<{
 
   const handleRecordSalesReturn = (bill: AdminBill) => {
     if (bill.status === 'Cancelled') return;
-    if (!window.confirm(`Process Sales Return & Cancel for ${bill.billNo} (${formatINR(bill.netAmount)})?`)) return;
-    const retEntry = {
-      id: `sr-${Date.now()}`,
-      returnNo: `SR-${String((store.salesReturns?.length || 0) + 1).padStart(3, '0')}`,
-      originalBillNo: bill.billNo,
-      date: new Date().toISOString().slice(0, 10),
-      shopId: bill.shopId,
-      shopName: bill.shopName,
-      customerName: bill.customerName,
-      amount: bill.netAmount,
-      reason: 'Sales Return recorded from HQ Orders'
+    const executeReturn = () => {
+      const retEntry = {
+        id: `sr-${Date.now()}`,
+        returnNo: `SR-${String((store.salesReturns?.length || 0) + 1).padStart(3, '0')}`,
+        originalBillNo: bill.billNo,
+        date: new Date().toISOString().slice(0, 10),
+        shopId: bill.shopId,
+        shopName: bill.shopName,
+        customerName: bill.customerName,
+        amount: bill.netAmount,
+        reason: 'Sales Return recorded from HQ Orders'
+      };
+      onUpdateStore({
+        ...store,
+        bills: store.bills.map(b =>
+          b.id === bill.id ? { ...b, status: 'Cancelled', pendingAmount: 0 } : b
+        ),
+        salesReturns: [retEntry, ...(store.salesReturns || [])]
+      });
+      onNotify?.({
+        type: 'warning',
+        title: `Sales Return ${retEntry.returnNo} Processed`,
+        message: `Bill ${bill.billNo} (${formatINR(bill.netAmount)}) marked returned & archived.`
+      });
     };
-    onUpdateStore({
-      ...store,
-      bills: store.bills.map(b =>
-        b.id === bill.id ? { ...b, status: 'Cancelled', pendingAmount: 0 } : b
-      ),
-      salesReturns: [retEntry, ...(store.salesReturns || [])]
-    });
+
+    if (onConfirm) {
+      onConfirm({
+        title: 'Confirm Sales Return',
+        message: `Process Sales Return & Cancel for Bill ${bill.billNo} (${formatINR(bill.netAmount)})?`,
+        confirmLabel: 'Process Return',
+        danger: true,
+        onConfirm: executeReturn
+      });
+    } else {
+      executeReturn();
+    }
   };
 
   return (
@@ -1283,7 +1476,8 @@ export const AdminPurchaseView: React.FC<{
   store: AdminStoreData;
   initialProductId?: string;
   onUpdateStore: (next: AdminStoreData) => void;
-}> = ({ store, initialProductId, onUpdateStore }) => {
+  onNotify?: AdminNotifyFn;
+}> = ({ store, initialProductId, onUpdateStore, onNotify }) => {
   const [vendorId, setVendorId] = useState(store.vendors[0]?.id || '');
   const [productId, setProductId] = useState(initialProductId || store.products[0]?.id || '');
   const [packType, setPackType] = useState<'Box' | 'Bag' | 'Loose'>('Box');
@@ -1292,6 +1486,17 @@ export const AdminPurchaseView: React.FC<{
   const [costPerUnit, setCostPerUnit] = useState('45');
   const [paidAmount, setPaidAmount] = useState('3600');
   const [targetLoc, setTargetLoc] = useState<'Central' | string>('Central');
+
+  // Supplier Partial Payment Modal
+  const [payVendorId, setPayVendorId] = useState<string | null>(null);
+  const [payVendorAmt, setPayVendorAmt] = useState('');
+  const [payVendorMethod, setPayVendorMethod] = useState<'CASH' | 'UPI' | 'BANK'>('BANK');
+
+  // Purchase Return form state
+  const [pretVendorId, setPretVendorId] = useState(store.vendors[0]?.id || '');
+  const [pretProdId, setPretProdId] = useState(store.products[0]?.id || '');
+  const [pretQty, setPretQty] = useState('5');
+  const [pretReason, setPretReason] = useState('Damaged pack returned to supplier');
 
   // Daily Shop Expense entry state
   const [expTitle, setExpTitle] = useState('');
@@ -1357,15 +1562,81 @@ export const AdminPurchaseView: React.FC<{
         ...store.purchases
       ]
     });
-    alert(`Inwarded ${totalUnits} ${prod.unit} of ${prod.name}!`);
+    onNotify?.({
+      type: 'success',
+      title: 'Purchase Inward Recorded',
+      message: `Inwarded ${totalUnits} ${prod.unit} of ${prod.name} (${formatINR(totalBill)}).`
+    });
   };
 
-  const handlePayVendorDue = (vId: string) => {
+  const handleConfirmVendorPayment = (e: React.FormEvent) => {
+    e.preventDefault();
+    const vendor = store.vendors.find(v => v.id === payVendorId);
+    const amt = Math.min(vendor?.balanceDue || 0, Number(payVendorAmt) || 0);
+    if (!vendor || amt <= 0) return;
+
+    const newDue = Math.max(0, vendor.balanceDue - amt);
     onUpdateStore({
       ...store,
       vendors: store.vendors.map(v =>
-        v.id === vId ? { ...v, totalPaid: v.totalPaid + v.balanceDue, balanceDue: 0 } : v
-      )
+        v.id === vendor.id ? { ...v, totalPaid: v.totalPaid + amt, balanceDue: newDue } : v
+      ),
+      vendorPayments: [
+        {
+          id: `vpay-${Date.now()}`,
+          date: new Date().toISOString().slice(0, 10),
+          vendorId: vendor.id,
+          vendorName: vendor.name,
+          amount: amt,
+          method: payVendorMethod,
+          balanceAfter: newDue,
+          note: `Vendor payment voucher (${payVendorMethod})`
+        },
+        ...(store.vendorPayments || [])
+      ]
+    });
+    setPayVendorId(null);
+    onNotify?.({
+      type: 'success',
+      title: 'Supplier Payment Voucher Saved',
+      message: `Paid ${formatINR(amt)} to ${vendor.name} via ${payVendorMethod}. Remaining due: ${formatINR(newDue)}.`
+    });
+  };
+
+  const handleRecordPurchaseReturn = (e: React.FormEvent) => {
+    e.preventDefault();
+    const vendor = store.vendors.find(v => v.id === pretVendorId);
+    const prod = store.products.find(p => p.id === pretProdId);
+    const qty = Number(pretQty) || 0;
+    if (!vendor || !prod || qty <= 0) return;
+    const returnAmt = Math.round(qty * prod.purchasePrice);
+    const prRecord = {
+      id: `pret-${Date.now()}`,
+      returnNo: `PR-${String((store.purchaseReturns?.length || 0) + 1).padStart(3, '0')}`,
+      originalInvoiceNo: `PINV-${100 + store.purchases.length - 1}`,
+      date: new Date().toISOString().slice(0, 10),
+      vendorId: vendor.id,
+      vendorName: vendor.name,
+      productId: prod.id,
+      productName: prod.name,
+      qty,
+      amount: returnAmt,
+      reason: pretReason.trim() || 'Supplier return'
+    };
+    onUpdateStore({
+      ...store,
+      products: store.products.map(p =>
+        p.id === prod.id ? { ...p, centralStock: Math.max(0, p.centralStock - qty) } : p
+      ),
+      vendors: store.vendors.map(v =>
+        v.id === vendor.id ? { ...v, balanceDue: Math.max(0, v.balanceDue - returnAmt) } : v
+      ),
+      purchaseReturns: [prRecord, ...(store.purchaseReturns || [])]
+    });
+    onNotify?.({
+      type: 'warning',
+      title: `Purchase Return ${prRecord.returnNo} Saved`,
+      message: `Returned ${qty} ${prod.unit} ${prod.name} (${formatINR(returnAmt)}) to ${vendor.name}.`
     });
   };
 
@@ -1480,8 +1751,15 @@ export const AdminPurchaseView: React.FC<{
                 <td style={{ fontWeight: 700, color: v.balanceDue > 0 ? '#B91C1C' : '#15803D' }}>{formatINR(v.balanceDue)}</td>
                 <td>
                   {v.balanceDue > 0 ? (
-                    <button className="bb-btn-primary" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => handlePayVendorDue(v.id)}>
-                      Settle Full
+                    <button
+                      className="bb-btn-primary"
+                      style={{ padding: '4px 10px', fontSize: 12 }}
+                      onClick={() => {
+                        setPayVendorId(v.id);
+                        setPayVendorAmt(String(v.balanceDue));
+                      }}
+                    >
+                      Pay / Voucher
                     </button>
                   ) : (
                     <span style={{ color: '#15803D', fontSize: 12, fontWeight: 600 }}>Cleared</span>
@@ -1492,6 +1770,72 @@ export const AdminPurchaseView: React.FC<{
           </tbody>
         </table>
       </div>
+
+      {/* Purchase Return Entry & Log */}
+      <div className="bb-card">
+        <h3 style={{ margin: '0 0 12px 0', fontSize: 15.5, fontWeight: 700 }}>Purchase Returns to Supplier</h3>
+        <form onSubmit={handleRecordPurchaseReturn} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+          <select value={pretVendorId} onChange={e => setPretVendorId(e.target.value)} style={{ flex: 1.4, minWidth: 160, padding: '7px 8px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }}>
+            {store.vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+          </select>
+          <select value={pretProdId} onChange={e => setPretProdId(e.target.value)} style={{ flex: 1.4, minWidth: 160, padding: '7px 8px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }}>
+            {store.products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.unit})</option>)}
+          </select>
+          <input type="number" min="1" value={pretQty} onChange={e => setPretQty(e.target.value)} placeholder="Qty" style={{ width: 75, padding: '7px 8px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
+          <input value={pretReason} onChange={e => setPretReason(e.target.value)} placeholder="Return reason" style={{ flex: 1.5, minWidth: 160, padding: '7px 8px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
+          <button type="submit" className="bb-btn-outline" style={{ color: '#B45309', borderColor: '#FCD34D' }}>
+            <RotateCcw size={13} /> Record Purchase Return
+          </button>
+        </form>
+        <table className="bb-table">
+          <thead>
+            <tr><th>Return No</th><th>Date</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Credit Note ₹</th><th>Reason</th></tr>
+          </thead>
+          <tbody>
+            {(store.purchaseReturns || []).map(pr => (
+              <tr key={pr.id}>
+                <td style={{ fontWeight: 700, color: '#1F4E63' }}>{pr.returnNo}</td>
+                <td>{pr.date}</td>
+                <td>{pr.vendorName}</td>
+                <td>{pr.productName}</td>
+                <td>{pr.qty}</td>
+                <td style={{ fontWeight: 700, color: '#15803D' }}>{formatINR(pr.amount)}</td>
+                <td style={{ color: '#64748B' }}>{pr.reason}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Partial Vendor Payment Voucher Modal */}
+      {payVendorId && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 80 }} onClick={() => setPayVendorId(null)}>
+          <div className="bb-card" style={{ width: 'min(420px, 92vw)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ margin: 0, fontSize: 15.5, fontWeight: 700 }}>Supplier Payment Voucher</h3>
+              <button onClick={() => setPayVendorId(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><X size={17} /></button>
+            </div>
+            <form onSubmit={handleConfirmVendorPayment} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600 }}>Payment Amount (₹)</label>
+                <input type="number" min="1" value={payVendorAmt} onChange={e => setPayVendorAmt(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600 }}>Method</label>
+                <select value={payVendorMethod} onChange={e => setPayVendorMethod(e.target.value as 'CASH' | 'UPI' | 'BANK')} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }}>
+                  <option value="BANK">Bank Transfer / NEFT</option>
+                  <option value="UPI">UPI</option>
+                  <option value="CASH">Cash Counter</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 6 }}>
+                <button type="button" className="bb-btn-outline" onClick={() => setPayVendorId(null)}>Cancel</button>
+                <button type="submit" className="bb-btn-primary">Confirm Payment</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Daily Shop Expenses & Sales Return Records */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18 }}>
@@ -1883,25 +2227,55 @@ export const AdminSettingsView: React.FC<{
   onUpdateStore: (next: AdminStoreData) => void;
   onResetDemoData: () => void;
   onPreviewClassicPos: () => void;
-}> = ({ store, onUpdateStore, onResetDemoData, onPreviewClassicPos }) => {
+  onNotify?: AdminNotifyFn;
+  onConfirm?: AdminConfirmFn;
+}> = ({ store, onUpdateStore, onResetDemoData, onPreviewClassicPos, onNotify, onConfirm }) => {
   const [users, setUsers] = useState<UserAccount[]>(() => loadUsers());
   const [newUser, setNewUser] = useState('');
   const [newPass, setNewPass] = useState('');
+  const [newLevel, setNewLevel] = useState<'User' | 'Administrator'>('User');
   const [whatsappNo, setWhatsappNo] = useState(store.ownerWhatsapp || '');
+  const [companyName, setCompanyName] = useState(store.company?.name || 'Barakah Bepaar Retail & Wholesale');
+  const [companyAddr, setCompanyAddr] = useState(store.company?.address || '');
+  const [companyGstin, setCompanyGstin] = useState(store.company?.gstin || '');
+  const [companyPhone, setCompanyPhone] = useState(store.company?.phone || '');
+  const [rbacUser, setRbacUser] = useState<UserAccount | null>(null);
+  const [rbacPerms, setRbacPerms] = useState<UserPermissions | null>(null);
 
   const handleAddShopLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const uname = newUser.trim().toUpperCase();
     if (!uname || !newPass.trim()) return;
     if (users.some(u => u.username.toUpperCase() === uname)) {
-      alert('Username already exists!');
+      onNotify?.({ type: 'error', title: 'Duplicate Username', message: `Account "${uname}" already exists.` });
       return;
     }
-    const next = [...users, { username: uname, password: newPass.trim(), level: 'User' as const }];
+    const next = [...users, { username: uname, password: newPass.trim(), level: newLevel }];
     saveUsers(next);
     setUsers(next);
     setNewUser('');
     setNewPass('');
+    onNotify?.({
+      type: 'success',
+      title: 'User Account Created',
+      message: `${uname} created as ${newLevel === 'Administrator' ? 'Admin (Modern HQ)' : 'Shop Cashier (Classic POS)'}.`
+    });
+  };
+
+  const openRbacModal = (u: UserAccount) => {
+    setRbacUser(u);
+    setRbacPerms(getPermissionsForUser(u.username, u.level));
+  };
+
+  const handleSaveRbac = () => {
+    if (!rbacUser || !rbacPerms) return;
+    savePermissionsForUser(rbacUser.username, rbacPerms);
+    onNotify?.({
+      type: 'success',
+      title: 'RBAC Permissions Saved',
+      message: `Updated module access matrix for ${rbacUser.username}.`
+    });
+    setRbacUser(null);
   };
 
   const handleDownloadJsonBackup = () => {
@@ -1912,40 +2286,91 @@ export const AdminSettingsView: React.FC<{
     a.download = `barakah_backup_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    onNotify?.({ type: 'success', title: 'JSON Backup Downloaded', message: 'Full HQ & multi-shop snapshot exported.' });
   };
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 18 }}>
-      {/* Shop Staff Logins */}
+      {/* Shop Staff Logins + RBAC */}
       <div className="bb-card">
-        <h3 style={{ margin: '0 0 10px 0', fontSize: 16, fontWeight: 700 }}>Shop & Admin Logins</h3>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: 16, fontWeight: 700 }}>Shop & Admin Logins (RBAC)</h3>
         <div style={{ fontSize: 12, color: '#64748B', marginBottom: 12 }}>
-          Admin accounts open Modern HQ UI · User accounts open Classic Shop POS UI
+          Admin accounts open Modern HQ UI · Shop accounts open Classic Vanigam POS UI
         </div>
-        <form onSubmit={handleAddShopLogin} style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-          <input value={newUser} onChange={e => setNewUser(e.target.value)} placeholder="Username (e.g. SHOP2)" style={{ flex: 1, padding: 7, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
-          <input value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Password" style={{ flex: 1, padding: 7, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
+        <form onSubmit={handleAddShopLogin} style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+          <input value={newUser} onChange={e => setNewUser(e.target.value)} placeholder="Username (SHOP2)" style={{ flex: 1, minWidth: 110, padding: 7, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
+          <input value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Password" style={{ flex: 1, minWidth: 100, padding: 7, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
+          <select value={newLevel} onChange={e => setNewLevel(e.target.value as 'User' | 'Administrator')} style={{ padding: 7, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }}>
+            <option value="User">Shop POS</option>
+            <option value="Administrator">HQ Admin</option>
+          </select>
           <button type="submit" className="bb-btn-primary">Add</button>
         </form>
         <table className="bb-table">
           <thead>
-            <tr><th>Username</th><th>Password</th><th>Role / UI</th></tr>
+            <tr><th>Username</th><th>Password</th><th>Role / UI</th><th>Permissions</th></tr>
           </thead>
           <tbody>
             {users.map(u => (
               <tr key={u.username}>
                 <td style={{ fontWeight: 700 }}>{u.username}</td>
                 <td><code>{u.password}</code></td>
-                <td>{u.level === 'Administrator' ? 'Admin (Modern HQ)' : 'Shop Cashier (Classic POS)'}</td>
+                <td>{u.level === 'Administrator' ? 'Admin (Modern HQ)' : 'Shop (Classic POS)'}</td>
+                <td>
+                  <button className="bb-btn-outline" style={{ padding: '3px 9px', fontSize: 11.5 }} onClick={() => openRbacModal(u)}>
+                    Configure
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
+      {/* Company Information & Receipt Header */}
+      <div className="bb-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Company Information & GST Profile</h3>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 600 }}>Company / Store Legal Name</label>
+          <input value={companyName} onChange={e => setCompanyName(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 600 }}>Address</label>
+          <input value={companyAddr} onChange={e => setCompanyAddr(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600 }}>GSTIN</label>
+            <input value={companyGstin} onChange={e => setCompanyGstin(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600 }}>Phone</label>
+            <input value={companyPhone} onChange={e => setCompanyPhone(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+          </div>
+        </div>
+        <button
+          className="bb-btn-primary"
+          onClick={() => {
+            onUpdateStore({
+              ...store,
+              company: {
+                name: companyName,
+                address: companyAddr,
+                gstin: companyGstin,
+                phone: companyPhone,
+                receiptFooter: store.company?.receiptFooter || 'Thank you!'
+              }
+            });
+            onNotify?.({ type: 'success', title: 'Company Profile Saved', message: 'Updated A4 Tax Invoice & receipt header details.' });
+          }}
+        >
+          Save Company Details
+        </button>
+      </div>
+
       {/* WhatsApp & Backup Controls */}
       <div className="bb-card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>WhatsApp, Backup & Classic POS Preview</h3>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>WhatsApp, Backup & Demo Tools</h3>
 
         <div>
           <label style={{ fontSize: 12.5, fontWeight: 600 }}>Owner WhatsApp Number (for Daily Reports)</label>
@@ -1960,7 +2385,7 @@ export const AdminSettingsView: React.FC<{
               className="bb-btn-primary"
               onClick={() => {
                 onUpdateStore({ ...store, ownerWhatsapp: whatsappNo });
-                alert('Owner WhatsApp saved!');
+                onNotify?.({ type: 'success', title: 'Owner WhatsApp Saved', message: `Daily closing reports linked to ${whatsappNo}.` });
               }}
             >
               Save
@@ -1972,19 +2397,30 @@ export const AdminSettingsView: React.FC<{
           <button className="bb-btn-outline" onClick={handleDownloadJsonBackup}>
             <Download size={15} /> Download Full Store JSON Backup
           </button>
-          <button className="bb-btn-outline" onClick={onPreviewClassicPos}>
-            <Monitor size={15} /> Preview Classic Shop POS Screen
-          </button>
           <button
             className="bb-btn-outline"
             style={{ color: '#B91C1C', borderColor: '#FCA5A5' }}
             onClick={() => {
-              if (window.confirm('Reset all Admin demo data back to initial seeded demo state?')) {
+              if (onConfirm) {
+                onConfirm({
+                  title: 'Reset Demo Store Data',
+                  message: 'Restore all HQ Admin shops, inventory, Udhar bills, and master records back to initial seeded demo state?',
+                  confirmLabel: 'Reset Demo Data',
+                  danger: true,
+                  onConfirm: () => {
+                    onResetDemoData();
+                    onNotify?.({ type: 'info', title: 'Demo Data Reset', message: 'Restored initial seeded Barakah Bepaar dataset.' });
+                  }
+                });
+              } else {
                 onResetDemoData();
               }
             }}
           >
             <RefreshCw size={15} /> Reset Demo Store Data
+          </button>
+          <button className="bb-btn-outline" style={{ fontSize: 11.5, color: '#64748B' }} onClick={onPreviewClassicPos}>
+            <Monitor size={14} /> Open Cashier Classic POS Simulator (Internal QA)
           </button>
         </div>
 
@@ -1992,6 +2428,34 @@ export const AdminSettingsView: React.FC<{
           <strong>Demo Note:</strong> Running in local-first demo mode (<code>localStorage</code>). Backend PostgreSQL & multi-terminal server sync will be connected to client hosting post-approval.
         </div>
       </div>
+
+      {/* RBAC Permissions Matrix Modal */}
+      {rbacUser && rbacPerms && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 90, padding: 16 }} onClick={() => setRbacUser(null)}>
+          <div className="bb-card" style={{ width: 'min(540px, 95vw)', maxHeight: '86vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Role Permissions: {rbacUser.username}</h3>
+              <button onClick={() => setRbacUser(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+              {(Object.keys(rbacPerms) as (keyof UserPermissions)[]).map(key => (
+                <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, padding: '5px 8px', borderRadius: 6, background: '#F8FAFC', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={rbacPerms[key]}
+                    onChange={e => setRbacPerms({ ...rbacPerms, [key]: e.target.checked })}
+                  />
+                  <span>{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
+                </label>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button className="bb-btn-outline" onClick={() => setRbacUser(null)}>Cancel</button>
+              <button className="bb-btn-primary" onClick={handleSaveRbac}>Save Permissions</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
