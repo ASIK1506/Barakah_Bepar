@@ -125,18 +125,17 @@ export const MdiShell: React.FC<MdiShellProps> = ({
           {isEnglish ? <><u>F</u>ile</> : 'கோப்பு'}
           {openMenu === 'file' && (
             <div className="win-dropdown-menu">
+              <div className="win-dropdown-item" style={{ color: '#888' }}>{isEnglish ? 'Company Information' : 'நிறுவன விவரம்'}</div>
+              <div className="win-dropdown-item" style={{ color: '#888' }}>{isEnglish ? 'Calculator' : 'கணிப்பான்'}</div>
+              <div className="win-dropdown-item" style={{ color: '#888' }}>{isEnglish ? 'Calendar' : 'நாட்காட்டி'}</div>
               <div className="win-dropdown-item" onClick={() => handleSelect('user_master')}>{isEnglish ? 'User Information' : 'பயனர் விவரம்'}</div>
-              <div className="win-dropdown-item" onClick={() => handleSelect('config')}>{isEnglish ? 'User Configuration' : 'பயனர் அமைப்பு'}</div>
+              <div className="win-dropdown-item" onClick={() => handleSelect('config')}>{isEnglish ? 'Configuration' : 'பயனர் அமைப்பு'}</div>
+              <div className="win-dropdown-item" style={{ color: '#888' }}>{isEnglish ? 'Repair Database' : 'தரவுத்தளம் சரிசெய்'}</div>
+              <div className="win-dropdown-item" onClick={() => handleSelect('product_master')}>{isEnglish ? 'Edit Product' : 'பொருள் திருத்து'}</div>
               <div className="win-dropdown-item" onClick={() => handleSelect('denomination')}>{isEnglish ? 'Denomination' : 'பண மதிப்பு'}</div>
-              <div className="win-dropdown-item" onClick={() => handleSelect('paid_in_out')}>{isEnglish ? 'Paid In / Paid Out' : 'வரவு / செலவு'}</div>
-              <div style={{ height: 1, background: '#A0A0A0', margin: '2px 0' }} />
-              <div className="win-dropdown-item" onClick={() => { setOpenMenu(null); onOpenSettings(); }}>{isEnglish ? 'Hardware & Weighing Scale...' : 'எடை இயந்திரம் & வன்பொருள்...'}</div>
-              <div style={{ height: 1, background: '#A0A0A0', margin: '2px 0' }} />
+              <div className="win-dropdown-item" onClick={() => handleSelect('barcode_gen')}>{isEnglish ? 'Edit Barcode' : 'பார்கோடு திருத்து'}</div>
               <div className="win-dropdown-item" onClick={() => { setOpenMenu(null); onLogOff?.(); }}>
                 {isEnglish ? 'Log Off' : 'பயனர் வெளியேறு (Log Off)'}
-              </div>
-              <div className="win-dropdown-item" onClick={handleCloseApp}>
-                {isEnglish ? 'Exit Application' : 'மூடு (Exit)'}
               </div>
             </div>
           )}

@@ -8,9 +8,14 @@ import {
   ProductMasterScreen,
   CustomerMasterScreen,
   DenominationScreen,
+  PaidInOutScreen,
   DayEndReportScreen,
   GenericMasterUtilityScreen
 } from './components/MasterScreens';
+import {
+  UserMasterScreen,
+  UserConfigurationScreen
+} from './components/UserScreens';
 import {
   SalesReturnScreen,
   PurchaseInvoiceScreen,
@@ -103,7 +108,13 @@ export const App: React.FC = () => {
         return <CustomerMasterScreen onClose={() => setActiveModule('sales_billing')} isEnglish={isEnglish} />;
 
       case 'denomination':
-        return <DenominationScreen onClose={() => setActiveModule('sales_billing')} isEnglish={isEnglish} />;
+        return (
+          <DenominationScreen
+            onClose={() => setActiveModule('sales_billing')}
+            isEnglish={isEnglish}
+            onOpenPaidInOut={() => setActiveModule('paid_in_out')}
+          />
+        );
 
       case 'day_end_report':
         return <DayEndReportScreen onClose={() => setActiveModule('sales_billing')} isEnglish={isEnglish} />;
@@ -137,8 +148,14 @@ export const App: React.FC = () => {
         return <ReportsScreen onClose={() => setActiveModule('sales_billing')} isEnglish={isEnglish} reportType={activeModule} />;
 
       case 'user_master':
+        return <UserMasterScreen onClose={() => setActiveModule('sales_billing')} isEnglish={isEnglish} />;
+
       case 'config':
+        return <UserConfigurationScreen onClose={() => setActiveModule('sales_billing')} isEnglish={isEnglish} />;
+
       case 'paid_in_out':
+        return <PaidInOutScreen onClose={() => setActiveModule('denomination')} isEnglish={isEnglish} />;
+
       case 'supplier_master':
       case 'tax_master':
       case 'barcode_gen':

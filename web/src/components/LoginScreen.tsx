@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { APP_VERSION_TAG } from '../lib/version';
+import { findStoredUser } from '../lib/userStore';
 import barakahIcon from '../assets/barakah-icon.png';
 import shoppingCartMouse from '../assets/shopping-cart-mouse.png';
 import '../styles/classicTheme.css';
@@ -39,6 +40,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     if (!trimmedPass) {
       setErrorMsg(isEnglish ? 'Please enter Password.' : 'கடவுச்சொல்லை உள்ளிடவும்.');
       passwordRef.current?.focus();
+      return;
+    }
+
+    // Check saved User Information accounts first
+    const storedUser = findStoredUser(trimmedUser);
+    if (storedUser && storedUser.password === trimmedPass) {
+      onLogin({ username: storedUser.username, role: storedUser.level });
       return;
     }
 
