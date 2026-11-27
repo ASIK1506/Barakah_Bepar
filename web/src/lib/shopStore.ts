@@ -1149,7 +1149,7 @@ export function recordPosInvoiceToAdminStore(inv: Invoice, cashierUsername = 'SH
     pendingAmount,
     paymentMode,
     status: pendingAmount > 0 ? 'Credit Pending' : 'Completed',
-    saleType: inv.rateType.toLowerCase().includes('wholesale') ? 'Wholesale' : 'Retail',
+    saleType: inv.rateType.toLowerCase().includes('wholesale') || inv.rateType.includes('3') ? 'Wholesale' : 'Retail',
     items: lineItems
   };
 

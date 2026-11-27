@@ -444,10 +444,17 @@ export const PosBillingScreen: React.FC<PosBillingScreenProps> = ({
   };
 
   // Confirm Print Action (Slide 33: "Do you want to print? Yes / No")
-  const handleConfirmPrintAction = (shouldPrint: boolean) => {
+  const handleConfirmPrintAction = (shouldPrint: boolean, overridePayment?: PaymentDetails) => {
     setIsPrintConfirmOpen(false);
 
-    // Build invoice record
+    // Build invoice record (preserving PaymentModal mode/paidAmount/changeAmount when supplied)
+    const finalPayment: PaymentDetails = overridePayment || {
+      mode: 'CASH',
+      amount: Math.round(totalNetAmt),
+      paidAmount: Math.round(totalNetAmt),
+      changeAmount: 0
+    };
+
     const newInv: Invoice = {
       id: `inv-${Date.now()}`,
       invoiceNo: invoiceNo,
@@ -466,12 +473,7 @@ export const PosBillingScreen: React.FC<PosBillingScreenProps> = ({
       deliveryCharge: 0,
       roundOff: 0,
       netAmount: Math.round(totalNetAmt),
-      payment: {
-        mode: 'CASH',
-        amount: Math.round(totalNetAmt),
-        paidAmount: Math.round(totalNetAmt),
-        changeAmount: 0
-      },
+      payment: finalPayment,
       isEstimate: false,
       createdAt: new Date().toISOString()
     };
@@ -1544,7 +1546,7 @@ export const PosBillingScreen: React.FC<PosBillingScreenProps> = ({
         onConfirmPayment={p => {
           setIsPaymentModalOpen(false);
           setChangeReturnedAmt(p.changeAmount.toFixed(2));
-          handleConfirmPrintAction(true);
+          handleConfirmPrintAction(true, p);
         }}
       />
 
