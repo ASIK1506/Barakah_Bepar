@@ -435,6 +435,135 @@
   color: #F8FAFC;
 }
 
+/* ============================================================================
+   7. SCROLL-REVEAL ANIMATION & INTERACTIVE RECHARTS STYLING
+   ============================================================================ */
+.bb-scroll-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s ease-out, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bb-scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bb-insights-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.bb-admin-root.dark-mode .bb-insights-header {
+  border-color: #334155;
+}
+
+.bb-shop-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  font-size: 12px;
+}
+
+.bb-shop-filter-pill select {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1E293B;
+  outline: none;
+  cursor: pointer;
+}
+
+.bb-admin-root.dark-mode .bb-shop-filter-pill {
+  background: #0F172A;
+  border-color: #334155;
+}
+
+.bb-admin-root.dark-mode .bb-shop-filter-pill select {
+  color: #E2E8F0;
+}
+
+.bb-pill-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  background: #EFF5F8;
+  border: 1px solid #D5E2EA;
+  border-radius: 11px;
+  gap: 2px;
+}
+
+.bb-admin-root.dark-mode .bb-pill-toggle-group {
+  background: #0F172A;
+  border-color: #334155;
+}
+
+.bb-pill-toggle-btn {
+  padding: 5px 11px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748B;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.bb-pill-toggle-btn:hover {
+  color: #1E293B;
+}
+
+.bb-pill-toggle-btn.active {
+  background: #FFFFFF;
+  color: #0F172A;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+}
+
+.bb-admin-root.dark-mode .bb-pill-toggle-btn.active {
+  background: #1E293B;
+  color: #F8FAFC;
+}
+
+.bb-chart-tooltip {
+  background: #0F172A;
+  color: #FFFFFF;
+  font-size: 12px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+  min-width: 185px;
+}
+
+.bb-chart-tooltip-title {
+  font-weight: 700;
+  color: #E2E8F0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+  padding-bottom: 5px;
+  margin-bottom: 6px;
+}
+
+.bb-chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: #CBD5E1;
+  margin-top: 3px;
+}
+
 @media print {
   .bb-sidebar,
   .bb-topbar,

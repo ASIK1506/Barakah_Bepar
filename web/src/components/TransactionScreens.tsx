@@ -38,11 +38,18 @@ export const SalesReturnScreen: React.FC<ScreenProps> = ({ onClose, isEnglish })
     { code: '5446', name: 'FA ROLLON', rate: 125.00, qty: 1, mrp: 155.00, tamil: 'பா ரோலான்', tax: 0, taxP: 0, val: 125.00 }
   ]);
 
+  const handleCloseSafe = React.useCallback(() => {
+    if (rows.length > 0 && !window.confirm(isEnglish ? 'Close Sales Return? Any unsaved items will be lost.' : 'விற்பனை திரும்பல் திரையை மூடவா? சேமிக்காதவை அழியும்.')) {
+      return;
+    }
+    onClose();
+  }, [rows.length, isEnglish, onClose]);
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') handleCloseSafe(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [handleCloseSafe]);
 
   const gross = rows.reduce((s, r) => s + r.val, 0);
   const net = Math.round(gross * 2) / 2;
@@ -61,7 +68,7 @@ export const SalesReturnScreen: React.FC<ScreenProps> = ({ onClose, isEnglish })
     <div className="win-child-window maximized">
       <div className="win-child-titlebar">
         <span>{isEnglish ? 'Sales Return' : 'விற்பனை திரும்பல்'}</span>
-        <button className="win-control-btn" style={{ color: '#B91C1C' }} onClick={onClose}>✕</button>
+        <button className="win-control-btn" style={{ color: '#B91C1C' }} onClick={handleCloseSafe}>✕</button>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '4px 8px', background: '#ECE9D8', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -72,11 +79,18 @@ export const SalesReturnScreen: React.FC<ScreenProps> = ({ onClose, isEnglish })
             <span style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>Stock - 0</span>
           </div>
           <div className="action-buttons-box">
-            <ToolbarButton icon="📄" en="New" ta="சேர்ப்பு" isEnglish={isEnglish} onClick={() => { setRows([]); setReturnNo('SR2'); }} />
+            <ToolbarButton icon="📄" en="New" ta="சேர்ப்பு" isEnglish={isEnglish} onClick={() => {
+              if (rows.length > 0 && !window.confirm(isEnglish ? 'Start a new Sales Return? Current items will be cleared.' : 'புதிய விற்பனை திரும்பல் தொடங்கவா?')) return;
+              setRows([]); setReturnNo('SR2');
+            }} />
             <ToolbarButton icon="💾" en="Save" ta="பதிவு" isEnglish={isEnglish} onClick={() => { window.barakahFs?.appendTransaction({ type: 'SALES_RETURN', returnNo, custCode, net }); alert(isEnglish ? `Sales Return ${returnNo} saved!` : `விற்பனை திரும்பல் ${returnNo} சேமிக்கப்பட்டது!`); }} />
-            <ToolbarButton icon="▲" en="Delete" ta="ரத்து" isEnglish={isEnglish} color="#DC2626" onClick={() => setRows(r => r.slice(0, -1))} />
+            <ToolbarButton icon="▲" en="Delete" ta="ரத்து" isEnglish={isEnglish} color="#DC2626" onClick={() => {
+              if (rows.length === 0) return;
+              if (!window.confirm(isEnglish ? 'Remove the last item from Sales Return?' : 'கடைசிப் பொருளை நீக்கவா?')) return;
+              setRows(r => r.slice(0, -1));
+            }} />
             <ToolbarButton icon="🖨" en="Print" ta="அச்சிடு" isEnglish={isEnglish} onClick={() => window.print()} />
-            <ToolbarButton icon="🛑" en="Close" ta="முற்றும்" isEnglish={isEnglish} color="#B91C1C" onClick={onClose} />
+            <ToolbarButton icon="🛑" en="Close" ta="முற்றும்" isEnglish={isEnglish} color="#B91C1C" onClick={handleCloseSafe} />
           </div>
         </div>
 
@@ -190,11 +204,18 @@ export const PurchaseInvoiceScreen: React.FC<ScreenProps & { isReturn?: boolean 
     { name: SEED_PRODUCTS[0].name, qty: 10, free: 1, prate: 155.00, val: 1550.00, disc: 0, tax: 77.50, srate: 180.00, mrp: 200.00 }
   ]);
 
+  const handleClosePurchase = React.useCallback(() => {
+    if (items.length > 0 && !window.confirm(isEnglish ? 'Close Purchase screen? Unsaved lines will be lost.' : 'கொள்முதல் திரையை மூடவா? சேமிக்காதவை அழியும்.')) {
+      return;
+    }
+    onClose();
+  }, [items.length, isEnglish, onClose]);
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClosePurchase(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [handleClosePurchase]);
 
   const gross = items.reduce((s, i) => s + i.val, 0);
   const tax = items.reduce((s, i) => s + i.tax, 0);
@@ -204,7 +225,7 @@ export const PurchaseInvoiceScreen: React.FC<ScreenProps & { isReturn?: boolean 
     <div className="win-child-window maximized">
       <div className="win-child-titlebar">
         <span>{isReturn ? (isEnglish ? 'PURCHASE RETURN' : 'கொள்முதல் திரும்பல்') : (isEnglish ? 'PURCHASE INFORMATION' : 'கொள்முதல் விவரம்')}</span>
-        <button className="win-control-btn" style={{ color: '#B91C1C' }} onClick={onClose}>✕</button>
+        <button className="win-control-btn" style={{ color: '#B91C1C' }} onClick={handleClosePurchase}>✕</button>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '4px 8px', background: '#ECE9D8', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -214,11 +235,18 @@ export const PurchaseInvoiceScreen: React.FC<ScreenProps & { isReturn?: boolean 
               : (isEnglish ? 'PURCHASE INFORMATION' : 'கொள்முதல் விவரம்')}
           </span>
           <div className="action-buttons-box">
-            <ToolbarButton icon="📄" en="New" ta="சேர்ப்பு" isEnglish={isEnglish} onClick={() => setItems([])} />
+            <ToolbarButton icon="📄" en="New" ta="சேர்ப்பு" isEnglish={isEnglish} onClick={() => {
+              if (items.length > 0 && !window.confirm(isEnglish ? 'Start a new Purchase entry? Current lines will be cleared.' : 'புதிய கொள்முதல் பதிவு தொடங்கவா?')) return;
+              setItems([]);
+            }} />
             <ToolbarButton icon="💾" en="Save" ta="பதிவு" isEnglish={isEnglish} onClick={() => { window.barakahFs?.appendTransaction({ type: isReturn ? 'PURCHASE_RETURN' : 'PURCHASE', refNo, nett }); alert(isEnglish ? `${refNo} saved!` : `${refNo} சேமிக்கப்பட்டது!`); }} />
-            <ToolbarButton icon="▲" en="Delete" ta="ரத்து" isEnglish={isEnglish} color="#DC2626" onClick={() => setItems(p => p.slice(0, -1))} />
+            <ToolbarButton icon="▲" en="Delete" ta="ரத்து" isEnglish={isEnglish} color="#DC2626" onClick={() => {
+              if (items.length === 0) return;
+              if (!window.confirm(isEnglish ? 'Remove the last product line?' : 'கடைசிப் பொருளை நீக்கவா?')) return;
+              setItems(p => p.slice(0, -1));
+            }} />
             <ToolbarButton icon="🖨" en="Print" ta="அச்சிடு" isEnglish={isEnglish} onClick={() => window.print()} />
-            <ToolbarButton icon="🛑" en="Close" ta="முற்றும்" isEnglish={isEnglish} color="#B91C1C" onClick={onClose} />
+            <ToolbarButton icon="🛑" en="Close" ta="முற்றும்" isEnglish={isEnglish} color="#B91C1C" onClick={handleClosePurchase} />
           </div>
         </div>
 
@@ -328,9 +356,15 @@ export const ReceiptPaymentScreen: React.FC<ScreenProps & { mode: 'receipt' | 'p
               : (isEnglish ? 'PAYMENT INFORMATION' : 'பணம் செலுத்தல் விவரம்')}
           </div>
           <div className="action-buttons-box">
-            <ToolbarButton icon="📄" en="New" ta="சேர்ப்பு" isEnglish={isEnglish} onClick={() => setAmount('0.00')} />
+            <ToolbarButton icon="📄" en="New" ta="சேர்ப்பு" isEnglish={isEnglish} onClick={() => {
+              if (parseFloat(amount) > 0 && !window.confirm(isEnglish ? 'Clear current amount and start new entry?' : 'தற்போதைய தொகையை அழித்து புதிய பதிவு தொடங்கவா?')) return;
+              setAmount('0.00');
+            }} />
             <ToolbarButton icon="💾" en="Save" ta="பதிவு" isEnglish={isEnglish} onClick={() => { window.barakahFs?.appendTransaction({ type: mode.toUpperCase(), docNo, partyCode, amount }); alert(isEnglish ? `${docNo} saved!` : `${docNo} சேமிக்கப்பட்டது!`); }} />
-            <ToolbarButton icon="▲" en="Delete" ta="ரத்து" isEnglish={isEnglish} color="#DC2626" onClick={() => setAmount('0.00')} />
+            <ToolbarButton icon="▲" en="Delete" ta="ரத்து" isEnglish={isEnglish} color="#DC2626" onClick={() => {
+              if (!window.confirm(isEnglish ? `Cancel/delete voucher ${docNo}?` : `வவுச்சர் ${docNo} ஐ ரத்து செய்யவா?`)) return;
+              setAmount('0.00');
+            }} />
             <ToolbarButton icon="🖨" en="Print" ta="அச்சிடு" isEnglish={isEnglish} onClick={() => window.print()} />
             <ToolbarButton icon="🛑" en="Close" ta="முற்றும்" isEnglish={isEnglish} color="#B91C1C" onClick={onClose} />
           </div>
@@ -412,7 +446,10 @@ export const StockUtilityScreen: React.FC<ScreenProps & { mode: 'conversion' | '
             {isConv ? (isEnglish ? 'STOCK TRANSFER' : 'சரக்கு மாற்றம்') : (isEnglish ? 'Stock Update' : 'சரக்கு புதுப்பிப்பு')}
           </span>
           <div className="action-buttons-box">
-            <ToolbarButton icon="📄" en="New" ta="சேர்ப்பு" isEnglish={isEnglish} onClick={() => setStock('0')} />
+            <ToolbarButton icon="📄" en="New" ta="சேர்ப்பு" isEnglish={isEnglish} onClick={() => {
+              if (!window.confirm(isEnglish ? 'Reset stock quantity to 0?' : 'இருப்பு எண்ணிக்கையை 0 ஆக மாற்றவா?')) return;
+              setStock('0');
+            }} />
             <ToolbarButton icon="💾" en="Save" ta="பதிவு" isEnglish={isEnglish} onClick={() => alert(isEnglish ? 'Stock updated!' : 'சரக்கு புதுப்பிக்கப்பட்டது!')} />
             <ToolbarButton icon="🛑" en="Close" ta="முற்றும்" isEnglish={isEnglish} color="#B91C1C" onClick={onClose} />
           </div>

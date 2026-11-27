@@ -1,4 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts';
 import { formatINR } from '../../lib/shopStore';
 
 /* ============================================================================
@@ -97,7 +106,7 @@ export const DonutChart: React.FC<{ slices: DonutSlice[]; size?: number }> = ({
 };
 
 /* ============================================================================
-   2. EXPENSE VS PROFIT DUAL AREA CHART (Matches Screenshot 1 Bottom-Left)
+   2. EXPENSE VS PROFIT DUAL AREA CHART (Animated Recharts + Scroll Reveal + Hover)
    ============================================================================ */
 interface ExpenseProfitPoint {
   month: string;
@@ -106,134 +115,190 @@ interface ExpenseProfitPoint {
 }
 
 export const ExpenseProfitAreaChart: React.FC<{ data: ExpenseProfitPoint[] }> = ({ data }) => {
-  const width = 480;
-  const height = 165;
-  const padL = 44;
-  const padR = 16;
-  const padT = 26;
-  const padB = 26;
-  const innerW = width - padL - padR;
-  const innerH = height - padT - padB;
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const maxVal = Math.max(...data.flatMap(d => [d.profit, d.expense]), 10000);
-  const minVal = 0;
-
-  const getX = (i: number) => padL + (i / Math.max(data.length - 1, 1)) * innerW;
-  const getY = (v: number) => padT + innerH - ((v - minVal) / (maxVal - minVal)) * innerH;
-
-  const buildSmoothPath = (vals: number[]) => {
-    const pts = vals.map((v, i) => ({ x: getX(i), y: getY(v) }));
-    if (pts.length === 0) return '';
-    let d = `M ${pts[0].x} ${pts[0].y}`;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[i];
-      const p1 = pts[i + 1];
-      const cx = (p0.x + p1.x) / 2;
-      d += ` C ${cx} ${p0.y}, ${cx} ${p1.y}, ${p1.x} ${p1.y}`;
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) {
+      setIsVisible(true);
+      return;
     }
-    return d;
-  };
+    const obs = new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          setIsVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
-  const profitPath = buildSmoothPath(data.map(d => d.profit));
-  const expensePath = buildSmoothPath(data.map(d => d.expense));
-
-  const profitArea = `${profitPath} L ${getX(data.length - 1)} ${padT + innerH} L ${getX(0)} ${padT + innerH} Z`;
-  const expenseArea = `${expensePath} L ${getX(data.length - 1)} ${padT + innerH} L ${getX(0)} ${padT + innerH} Z`;
-
-  let maxProfitIdx = 0;
-  let maxExpenseIdx = 0;
-  data.forEach((d, i) => {
-    if (d.profit > data[maxProfitIdx].profit) maxProfitIdx = i;
-    if (d.expense > data[maxExpenseIdx].expense) maxExpenseIdx = i;
+  let peakProfit = data[0];
+  let peakExpense = data[0];
+  data.forEach(d => {
+    if (!peakProfit || d.profit > peakProfit.profit) peakProfit = d;
+    if (!peakExpense || d.expense > peakExpense.expense) peakExpense = d;
   });
 
-  const yTicks = [0.25, 0.5, 0.75, 1].map(f => Math.round((maxVal * f) / 1000) * 1000);
-
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
-      <defs>
-        <linearGradient id="bbProfitGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#166534" stopOpacity="0.24" />
-          <stop offset="100%" stopColor="#166534" stopOpacity="0.02" />
-        </linearGradient>
-        <linearGradient id="bbExpGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#C26D4A" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="#C26D4A" stopOpacity="0.02" />
-        </linearGradient>
-      </defs>
+    <div ref={containerRef} style={{ width: '100%' }}>
+      {/* Peak Indicator Pills */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          marginBottom: 8
+        }}
+      >
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {peakProfit && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '3px 9px',
+                borderRadius: 999,
+                background: 'rgba(45, 106, 79, 0.12)',
+                color: '#2D6A4F'
+              }}
+            >
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#2D6A4F' }} />
+              Highest Profit: {peakProfit.month} ({formatINR(peakProfit.profit, true)})
+            </span>
+          )}
+          {peakExpense && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '3px 9px',
+                borderRadius: 999,
+                background: 'rgba(194, 109, 74, 0.12)',
+                color: '#C26D4A'
+              }}
+            >
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C26D4A' }} />
+              Highest Expense: {peakExpense.month} ({formatINR(peakExpense.expense, true)})
+            </span>
+          )}
+        </div>
+      </div>
 
-      {yTicks.map((tick, idx) => {
-        const y = getY(tick);
-        return (
-          <g key={idx}>
-            <line x1={padL} y1={y} x2={width - padR} y2={y} stroke="#E2E8F0" strokeDasharray="3 3" />
-            <text x={padL - 8} y={y + 3} textAnchor="end" fontSize="10" fill="#64748B">
-              {tick >= 1000 ? `${Math.round(tick / 1000)}k` : tick}
-            </text>
-          </g>
-        );
-      })}
-
-      <path d={expenseArea} fill="url(#bbExpGrad)" />
-      <path d={profitArea} fill="url(#bbProfitGrad)" />
-      <path d={expensePath} fill="none" stroke="#C26D4A" strokeWidth="2" />
-      <path d={profitPath} fill="none" stroke="#2D6A4F" strokeWidth="2.2" />
-
-      {/* Highlight Highest Expense & Highest Profit pills matching Screenshot 1 */}
-      {data[maxExpenseIdx] && (
-        <g>
-          <circle cx={getX(maxExpenseIdx)} cy={getY(data[maxExpenseIdx].expense)} r="3.5" fill="#C26D4A" />
-          <rect
-            x={Math.min(getX(maxExpenseIdx) - 42, width - 92)}
-            y={Math.max(2, getY(data[maxExpenseIdx].expense) - 24)}
-            width="84"
-            height="16"
-            rx="3"
-            fill="#C26D4A"
-          />
-          <text
-            x={Math.min(getX(maxExpenseIdx), width - 50)}
-            y={Math.max(13, getY(data[maxExpenseIdx].expense) - 13)}
-            textAnchor="middle"
-            fill="#FFFFFF"
-            fontSize="8.5"
-            fontWeight="600"
-          >
-            Highest Expense
-          </text>
-        </g>
-      )}
-
-      {data[maxProfitIdx] && (
-        <g>
-          <circle cx={getX(maxProfitIdx)} cy={getY(data[maxProfitIdx].profit)} r="3.5" fill="#2D6A4F" />
-          <rect
-            x={Math.min(getX(maxProfitIdx) - 38, width - 82)}
-            y={Math.max(2, getY(data[maxProfitIdx].profit) - 24)}
-            width="76"
-            height="16"
-            rx="3"
-            fill="#2D6A4F"
-          />
-          <text
-            x={Math.min(getX(maxProfitIdx), width - 44)}
-            y={Math.max(13, getY(data[maxProfitIdx].profit) - 13)}
-            textAnchor="middle"
-            fill="#FFFFFF"
-            fontSize="8.5"
-            fontWeight="600"
-          >
-            Highest Profit
-          </text>
-        </g>
-      )}
-
-      {data.map((d, i) => (
-        <text key={i} x={getX(i)} y={height - 6} textAnchor="middle" fontSize="10.5" fill="#475569">
-          {d.month}
-        </text>
-      ))}
-    </svg>
+      {/* Animated Recharts Dual Area Chart */}
+      <div style={{ width: '100%', height: 195 }}>
+        {isVisible && (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 10, right: 12, left: -14, bottom: 0 }}>
+              <defs>
+                <linearGradient id="bbProfitGradAnim" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2D6A4F" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#2D6A4F" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="bbExpGradAnim" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#C26D4A" stopOpacity={0.32} />
+                  <stop offset="100%" stopColor="#C26D4A" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="month"
+                stroke="#64748B"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="#64748B"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={v => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
+              />
+              <Tooltip
+                content={({ active, payload, label }) => {
+                  if (active && payload?.length) {
+                    const row = payload[0].payload as ExpenseProfitPoint;
+                    const net = row.profit - row.expense;
+                    return (
+                      <div className="bb-chart-tooltip">
+                        <div className="bb-chart-tooltip-title">Month: {label}</div>
+                        <div className="bb-chart-tooltip-row">
+                          <span>Gross Profit:</span>
+                          <strong style={{ color: '#34D399', fontFamily: 'monospace' }}>
+                            {formatINR(row.profit)}
+                          </strong>
+                        </div>
+                        <div className="bb-chart-tooltip-row">
+                          <span>Expenses:</span>
+                          <strong style={{ color: '#FB923C', fontFamily: 'monospace' }}>
+                            {formatINR(row.expense)}
+                          </strong>
+                        </div>
+                        <div
+                          className="bb-chart-tooltip-row"
+                          style={{ borderTop: '1px solid rgba(148,163,184,0.25)', paddingTop: 4, marginTop: 2 }}
+                        >
+                          <span>Net Surplus:</span>
+                          <strong
+                            style={{
+                              color: net >= 0 ? '#6EE7B7' : '#FCA5A5',
+                              fontFamily: 'monospace'
+                            }}
+                          >
+                            {net >= 0 ? '+' : ''}
+                            {formatINR(net)}
+                          </strong>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="expense"
+                name="Expense"
+                stroke="#C26D4A"
+                strokeWidth={2.4}
+                fill="url(#bbExpGradAnim)"
+                dot={{ r: 3.5, fill: '#C26D4A', strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: '#C26D4A', stroke: '#FFFFFF', strokeWidth: 2 }}
+                isAnimationActive={true}
+                animationDuration={1050}
+                animationEasing="ease-out"
+              />
+              <Area
+                type="monotone"
+                dataKey="profit"
+                name="Profit"
+                stroke="#2D6A4F"
+                strokeWidth={2.6}
+                fill="url(#bbProfitGradAnim)"
+                dot={{ r: 3.5, fill: '#2D6A4F', strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: '#2D6A4F', stroke: '#FFFFFF', strokeWidth: 2 }}
+                isAnimationActive={true}
+                animationDuration={1200}
+                animationEasing="ease-out"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+    </div>
   );
 };
 

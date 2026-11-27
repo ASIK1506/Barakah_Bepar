@@ -301,6 +301,11 @@ export const PosBillingScreen: React.FC<PosBillingScreenProps> = ({
   const handleDeleteRow = (idx?: number) => {
     const target = idx !== undefined ? idx : selectedRowIndex;
     if (target >= 0 && target < cartItems.length) {
+      const item = cartItems[target];
+      const msg = isEnglishOnly
+        ? `Remove "${item.product.name}" (Qty: ${item.quantity}) from this bill?`
+        : `"${item.product.tamilName || item.product.name}" (அளவு: ${item.quantity}) ஐ பில்லில் இருந்து நீக்கவா?`;
+      if (!window.confirm(msg)) return;
       setCartItems(prev => {
         const next = prev.filter((_, i) => i !== target);
         return next.map((item, i) => ({ ...item, serialNo: i + 1 }));
@@ -339,13 +344,23 @@ export const PosBillingScreen: React.FC<PosBillingScreenProps> = ({
   };
 
   // Record Navigation Controls (|<, << F8, >> F7, >|)
+  const confirmDiscardForHistory = (): boolean => {
+    if (cartItems.length > 0 && historyIdx === null) {
+      const msg = isEnglishOnly
+        ? 'Current bill has unsaved items. Discard and view saved invoice?'
+        : 'தற்போதைய பில் சேமிக்கப்படவில்லை. பழைய பில்லைப் பார்க்கவா?';
+      return window.confirm(msg);
+    }
+    return true;
+  };
+
   const handleFirstBill = () => {
-    if (invoicesHistory.length === 0) return;
+    if (invoicesHistory.length === 0 || !confirmDiscardForHistory()) return;
     loadHistoryInvoice(invoicesHistory.length - 1); // Oldest
   };
 
   const handlePrevBill = () => {
-    if (invoicesHistory.length === 0) return;
+    if (invoicesHistory.length === 0 || !confirmDiscardForHistory()) return;
     if (historyIdx === null) {
       loadHistoryInvoice(0); // Step back from new bill to most recent saved
     } else if (historyIdx < invoicesHistory.length - 1) {
@@ -373,7 +388,7 @@ export const PosBillingScreen: React.FC<PosBillingScreenProps> = ({
   };
 
   const handleLatestBill = () => {
-    if (invoicesHistory.length === 0) return;
+    if (invoicesHistory.length === 0 || !confirmDiscardForHistory()) return;
     loadHistoryInvoice(0); // Newest saved
   };
 

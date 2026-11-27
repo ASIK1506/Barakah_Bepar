@@ -63,6 +63,10 @@ export const MdiShell: React.FC<MdiShellProps> = ({
 
   const handleExitToLogin = () => {
     setOpenMenu(null);
+    const msg = isEnglish
+      ? 'Do you want to save & exit to the login screen? Any unsaved screen changes will be lost.'
+      : 'சேமித்து உள்நுழைவு திரைக்கு வெளியேற விரும்புகிறீர்களா? சேமிக்காத தகவல்கள் அழியும்.';
+    if (!window.confirm(msg)) return;
     if (onLogOff) {
       onLogOff();
     } else {
@@ -143,7 +147,7 @@ export const MdiShell: React.FC<MdiShellProps> = ({
               <div className="win-dropdown-item" onClick={() => handleSelect('product_master')}>{isEnglish ? 'Edit Product' : 'பொருள் திருத்து'}</div>
               <div className="win-dropdown-item" onClick={() => handleSelect('denomination')}>{isEnglish ? 'Denomination' : 'பண மதிப்பு'}</div>
               <div className="win-dropdown-item" onClick={() => handleSelect('barcode_gen')}>{isEnglish ? 'Edit Barcode' : 'பார்கோடு திருத்து'}</div>
-              <div className="win-dropdown-item" onClick={() => { setOpenMenu(null); onLogOff?.(); }}>
+              <div className="win-dropdown-item" onClick={handleExitToLogin}>
                 {isEnglish ? 'Log Off' : 'பயனர் வெளியேறு (Log Off)'}
               </div>
             </div>

@@ -20,20 +20,22 @@ import {
   AdminTaxSlab,
   formatINR
 } from '../../lib/shopStore';
-import { AdminNotifyFn } from './AdminNotifications';
+import { AdminNotifyFn, AdminConfirmFn } from './AdminNotifications';
 
 interface AdminMastersViewProps {
   store: AdminStoreData;
   searchQuery: string;
   onUpdateStore: (next: AdminStoreData) => void;
   onNotify: AdminNotifyFn;
+  onConfirm?: AdminConfirmFn;
 }
 
 export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
   store,
   searchQuery,
   onUpdateStore,
-  onNotify
+  onNotify,
+  onConfirm
 }) => {
   const [subTab, setSubTab] = useState<'products' | 'categories' | 'suppliers' | 'taxes' | 'cash_till'>('products');
 
@@ -448,7 +450,23 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
                     <button
                       className="bb-btn-outline"
                       style={{ padding: '4px 8px', color: '#B91C1C', borderColor: '#FCA5A5' }}
-                      onClick={() => onUpdateStore({ ...store, categories: categories.filter(x => x.id !== c.id) })}
+                      onClick={() => {
+                        const removeCat = () => {
+                          onUpdateStore({ ...store, categories: categories.filter(x => x.id !== c.id) });
+                          onNotify({ type: 'info', title: 'Category Removed', message: `${c.name} (${c.code}) was removed.` });
+                        };
+                        if (onConfirm) {
+                          onConfirm({
+                            title: `Remove Category "${c.name}"?`,
+                            message: 'Products currently assigned to this category will keep their text label, but the category will no longer appear in dropdowns.',
+                            confirmLabel: 'Remove Category',
+                            danger: true,
+                            onConfirm: removeCat
+                          });
+                        } else {
+                          removeCat();
+                        }
+                      }}
                     >
                       <Trash2 size={12} /> Remove
                     </button>

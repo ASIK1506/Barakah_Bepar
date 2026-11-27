@@ -174,7 +174,18 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
         {/* Bottom Logout (Shop POS View moved to Settings so Admin stays in Modern UI) */}
         <div className="bb-sidebar-footer">
-          <button className="bb-logout-btn" onClick={onLogOff}>
+          <button
+            className="bb-logout-btn"
+            onClick={() =>
+              handleConfirm({
+                title: 'Sign Out of Barakah HQ?',
+                message: 'Are you sure you want to exit the Admin HQ Dashboard and return to the Login screen?',
+                confirmLabel: 'Sign Out',
+                danger: false,
+                onConfirm: onLogOff
+              })
+            }
+          >
             <LogOut size={16} />
             <span>Logout</span>
           </button>
@@ -309,6 +320,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               searchQuery={searchQuery}
               onUpdateStore={handleUpdateStore}
               onNotify={handleNotify}
+              onConfirm={handleConfirm}
             />
           )}
 

@@ -19,6 +19,7 @@ import {
   buildDailyClosingWhatsAppMessage
 } from '../../lib/shopStore';
 import { DonutChart, ExpenseProfitAreaChart } from './AdminCharts';
+import { InsightsChart } from './InsightsChart';
 
 interface AdminDashboardProps {
   store: AdminStoreData;
@@ -329,7 +330,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="bb-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={{ fontSize: 15.5, fontWeight: 700 }}>Expense vs Profit</span>
-              <span style={{ fontSize: 12.5, color: '#64748B' }}>Last 6 months</span>
+              <span style={{ fontSize: 12.5, color: '#64748B' }}>Last 6 months · Interactive Hover</span>
             </div>
             <ExpenseProfitAreaChart data={expenseProfitTrend} />
           </div>
@@ -421,6 +422,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* ====================================================================
+          SECTION 3.5: HOURLY & WEEKLY SHOP TRANSACTIONS INSIGHTS CHART
+          ==================================================================== */}
+      <InsightsChart bills={store.bills} shops={store.shops} />
 
       {/* ====================================================================
           SECTION 4: SKYWALK RECENT BILLS & FINANCIAL MONITORING STRIP
