@@ -1,0 +1,212 @@
+/* ============================================================================
+   BARAKAH BEPAAR — MODERN SPLIT LOGIN SCREEN (Skywalk Reference Architecture)
+   50/50 split hero slideshow + light SaaS Admin/Shop dual-mode auth panel
+   ============================================================================ */
+
+.bb-login-shell {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #F5F7FA;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+/* Left Hero Slideshow Panel */
+.bb-login-left {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #0F172A;
+  color: #FFFFFF;
+  user-select: none;
+}
+
+@media (max-width: 900px) {
+  .bb-login-left {
+    display: none;
+  }
+}
+
+.bb-login-slide-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.8s ease-in-out, transform 6s ease-out;
+}
+
+.bb-login-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(0, 0, 0, 0.16) 35%,
+    rgba(0, 0, 0, 0.62) 70%,
+    rgba(0, 0, 0, 0.88) 100%
+  );
+  z-index: 2;
+}
+
+.bb-login-left-content {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 36px 40px;
+  box-sizing: border-box;
+}
+
+.bb-login-brand-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0EA5E9 0%, #0D9488 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.35);
+}
+
+.bb-login-dot {
+  height: 6px;
+  border-radius: 999px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.bb-login-pause-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.18s;
+}
+
+.bb-login-pause-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Right Light SaaS Auth Panel */
+.bb-login-right {
+  flex: 1;
+  background: #F5F7FA;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-y: auto;
+  padding: 24px 36px;
+}
+
+.bb-login-card-inner {
+  margin: auto;
+  width: 100%;
+  max-width: 400px;
+}
+
+.bb-secure-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1F4E63;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+}
+
+.bb-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #E8EDF2;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.bb-mode-tab {
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bb-mode-tab.active {
+  background: #FFFFFF;
+  color: #0F172A;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.bb-auth-input-wrap {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 0 12px;
+  height: 46px;
+  gap: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bb-auth-input-wrap:focus-within {
+  border-color: #1F4E63;
+  box-shadow: 0 0 0 3px rgba(31, 78, 99, 0.1);
+}
+
+.bb-auth-input-wrap input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #0F172A;
+}
+
+.bb-login-cta {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: #0F172A;
+  color: #FFFFFF;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.bb-login-cta:hover {
+  background: #1E293B;
+}
+
+.bb-login-cta:active {
+  transform: scale(0.99);
+}
