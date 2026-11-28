@@ -363,14 +363,14 @@ export const AdminShopsView: React.FC<{
                       </div>
                     ) : (
                       <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Store size={14} color="#1F4E63" />
+                        <Store size={14} color="var(--bb-accent-link)" />
                         {shop.name}
                       </div>
                     )}
                   </td>
                   <td>{shop.location}</td>
                   <td>
-                    <code style={{ background: '#EFF6FF', padding: '2px 7px', borderRadius: 4, fontSize: 12 }}>
+                    <code style={{ background: 'var(--bb-surface-soft)', padding: '2px 7px', borderRadius: 4, fontSize: 12 }}>
                       {shop.cashierUsername}
                     </code>
                   </td>
@@ -463,7 +463,7 @@ export const AdminShopsView: React.FC<{
                 <td>{a.fromLocation}</td>
                 <td style={{ fontWeight: 600 }}>{a.toShopName}</td>
                 <td>{a.productName}</td>
-                <td style={{ fontWeight: 700, color: '#1F4E63' }}>{a.qty} {a.unitLabel}</td>
+                <td style={{ fontWeight: 700, color: 'var(--bb-accent-link)' }}>{a.qty} {a.unitLabel}</td>
                 <td>{a.note}</td>
               </tr>
             ))}
@@ -544,7 +544,7 @@ export const AdminShopsView: React.FC<{
           <tbody>
             {(store.shopTransfers || []).map(tr => (
               <tr key={tr.id}>
-                <td style={{ fontWeight: 700, color: '#1F4E63' }}>{tr.transferNo}</td>
+                <td style={{ fontWeight: 700, color: 'var(--bb-accent-link)' }}>{tr.transferNo}</td>
                 <td>{tr.date}</td>
                 <td>{tr.fromShopName} → <strong>{tr.toShopName}</strong></td>
                 <td>{tr.productName}</td>
@@ -669,11 +669,11 @@ export const AdminInventoryView: React.FC<{
           <div className="bb-card">
             <h3 style={{ margin: '0 0 12px 0', fontSize: 15.5, fontWeight: 700 }}>Warehouse</h3>
             <div style={{ textAlign: 'center', fontSize: 24, fontWeight: 700 }}>{utilPct}%</div>
-            <div style={{ textAlign: 'center', fontSize: 12.5, color: '#64748B', marginBottom: 12 }}>Utilization</div>
-            <div style={{ height: 7, background: '#E2E8F0', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ textAlign: 'center', fontSize: 12.5, color: 'var(--bb-text-muted)', marginBottom: 12 }}>Utilization</div>
+            <div style={{ height: 7, background: 'var(--bb-surface-track)', borderRadius: 99, overflow: 'hidden' }}>
               <div style={{ width: `${utilPct}%`, height: '100%', background: '#5B7B8B' }} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#64748B', marginTop: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--bb-text-muted)', marginTop: 6 }}>
               <span>0%</span>
               <span>100%</span>
             </div>
@@ -887,14 +887,14 @@ export const AdminInventoryView: React.FC<{
                     alignItems: 'center',
                     padding: '8px 12px',
                     borderRadius: 8,
-                    background: '#F1F5F9'
+                    background: 'var(--bb-surface-soft)'
                   }}
                 >
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{tier.label}</div>
-                    {tier.unitNote && <div style={{ fontSize: 11, color: '#64748B' }}>{tier.unitNote}</div>}
+                    {tier.unitNote && <div style={{ fontSize: 11, color: 'var(--bb-text-muted)' }}>{tier.unitNote}</div>}
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: '#1F4E63' }}>{formatINR(tier.rate)}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--bb-accent-link)' }}>{formatINR(tier.rate)}</div>
                 </div>
               ))}
             </div>
@@ -1051,7 +1051,7 @@ export const AdminOrdersView: React.FC<{
       <div className="bb-card" style={{ padding: '14px 18px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1F4E63' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--bb-accent-link)' }}>
               Accounts Ledger — Enter Bill Number to Check Pending Udhaar
             </div>
             <div style={{ fontSize: 12, color: '#64748B' }}>
@@ -1093,7 +1093,7 @@ export const AdminOrdersView: React.FC<{
               <div style={{ fontWeight: 700, fontSize: 14 }}>
                 {matchedBill.billNo} — {matchedBill.customerName} ({matchedBill.saleType})
               </div>
-              <div style={{ fontSize: 12.5, color: '#475569', marginTop: 2 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--bb-text-secondary)', marginTop: 2 }}>
                 Bill Total: <strong>{formatINR(matchedBill.netAmount)}</strong> · Paid:{' '}
                 <strong style={{ color: '#15803D' }}>{formatINR(matchedBill.paidAmount)}</strong> · Pending Balance:{' '}
                 <strong style={{ color: matchedBill.pendingAmount > 0 ? '#B91C1C' : '#15803D' }}>
@@ -1281,7 +1281,7 @@ export const AdminOrdersView: React.FC<{
                   title="Click to inspect / settle bill"
                 >
                   <td>{(page - 1) * pageSize + idx + 1}</td>
-                  <td style={{ fontWeight: 700, color: '#1F4E63' }}>{b.billNo}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--bb-accent-link)' }}>{b.billNo}</td>
                   <td>
                     <div>{b.customerName}</div>
                     <div style={{ fontSize: 11, color: '#64748B' }}>{b.date} · {b.paymentMode} ({b.saleType})</div>
@@ -1794,7 +1794,7 @@ export const AdminPurchaseView: React.FC<{
           <tbody>
             {(store.purchaseReturns || []).map(pr => (
               <tr key={pr.id}>
-                <td style={{ fontWeight: 700, color: '#1F4E63' }}>{pr.returnNo}</td>
+                <td style={{ fontWeight: 700, color: 'var(--bb-accent-link)' }}>{pr.returnNo}</td>
                 <td>{pr.date}</td>
                 <td>{pr.vendorName}</td>
                 <td>{pr.productName}</td>
@@ -1896,7 +1896,7 @@ export const AdminPurchaseView: React.FC<{
             <tbody>
               {(store.salesReturns || []).map(sr => (
                 <tr key={sr.id}>
-                  <td style={{ fontWeight: 700, color: '#1F4E63' }}>{sr.returnNo}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--bb-accent-link)' }}>{sr.returnNo}</td>
                   <td>{sr.originalBillNo}</td>
                   <td>{sr.customerName}</td>
                   <td style={{ fontWeight: 700, color: '#B45309' }}>{formatINR(sr.amount)}</td>
@@ -2059,10 +2059,10 @@ export const AdminReportingView: React.FC<{ store: AdminStoreData }> = ({ store 
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18 }}>
           {/* P&L Waterfall */}
-          <div style={{ border: '1px solid #E2E8F0', borderRadius: 10, padding: 14 }}>
+          <div style={{ border: '1px solid var(--bb-border-soft)', borderRadius: 10, padding: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <strong style={{ fontSize: 14.5 }}>Profit Breakdown</strong>
-              <span style={{ background: '#DCFCE7', color: '#166534', padding: '2px 8px', borderRadius: 99, fontSize: 11.5, fontWeight: 700 }}>
+              <span className="bb-status-badge-green" style={{ padding: '2px 8px', borderRadius: 99, fontSize: 11.5, fontWeight: 700 }}>
                 Margin: {marginPct}%
               </span>
             </div>
@@ -2093,17 +2093,17 @@ export const AdminReportingView: React.FC<{ store: AdminStoreData }> = ({ store 
           </div>
 
           {/* Busiest Hours Analytics */}
-          <div style={{ border: '1px solid #E2E8F0', borderRadius: 10, padding: 14 }}>
+          <div style={{ border: '1px solid var(--bb-border-soft)', borderRadius: 10, padding: 14 }}>
             <strong style={{ fontSize: 14.5, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-              <Clock size={15} color="#1F4E63" /> Busiest Hours (Peak Rush)
+              <Clock size={15} color="var(--bb-accent-link)" /> Busiest Hours (Peak Rush)
             </strong>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {hourlyBuckets.map(h => {
                 const pct = Math.round((h.bills / maxHourlyBills) * 100);
                 return (
                   <div key={h.hour} style={{ display: 'grid', gridTemplateColumns: '76px 1fr 56px', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                    <span style={{ fontWeight: 600, color: '#475569' }}>{h.hour}</span>
-                    <div style={{ height: 10, background: '#EFF5F8', borderRadius: 99, overflow: 'hidden' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--bb-text-secondary)' }}>{h.hour}</span>
+                    <div style={{ height: 10, background: 'var(--bb-surface-soft)', borderRadius: 99, overflow: 'hidden' }}>
                       <div style={{ width: `${pct}%`, height: '100%', background: pct > 80 ? '#1F4E63' : '#5B7B8B', borderRadius: 99 }} />
                     </div>
                     <span style={{ textAlign: 'right', fontWeight: 700 }}>{h.bills} bills</span>
@@ -2114,7 +2114,7 @@ export const AdminReportingView: React.FC<{ store: AdminStoreData }> = ({ store 
           </div>
 
           {/* Staff-Wise Billing Performance */}
-          <div style={{ border: '1px solid #E2E8F0', borderRadius: 10, padding: 14 }}>
+          <div style={{ border: '1px solid var(--bb-border-soft)', borderRadius: 10, padding: 14 }}>
             <strong style={{ fontSize: 14.5, display: 'block', marginBottom: 10 }}>Staff-Wise Billing Performance</strong>
             <table className="bb-table">
               <thead>
@@ -2205,7 +2205,7 @@ export const AdminReportingView: React.FC<{ store: AdminStoreData }> = ({ store 
                         {isDead ? `Dead Stock (${item.product.lastSoldDaysAgo}d idle)` : isLow ? 'Reorder Urgent' : 'Slow Mover'}
                       </span>
                     </td>
-                    <td style={{ fontWeight: 700, color: '#1F4E63' }}>
+                    <td style={{ fontWeight: 700, color: 'var(--bb-accent-link)' }}>
                       {item.reorderSuggestedQty > 0 ? `+${item.reorderSuggestedQty} ${item.product.unit}` : 'Hold / Discount'}
                     </td>
                   </tr>
@@ -2424,7 +2424,7 @@ export const AdminSettingsView: React.FC<{
           </button>
         </div>
 
-        <div style={{ fontSize: 11.5, color: '#64748B', background: '#F8FAFC', padding: 10, borderRadius: 8 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--bb-text-muted)', background: 'var(--bb-surface-soft)', padding: 10, borderRadius: 8 }}>
           <strong>Demo Note:</strong> Running in local-first demo mode (<code>localStorage</code>). Backend PostgreSQL & multi-terminal server sync will be connected to client hosting post-approval.
         </div>
       </div>
@@ -2439,7 +2439,7 @@ export const AdminSettingsView: React.FC<{
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
               {(Object.keys(rbacPerms) as (keyof UserPermissions)[]).map(key => (
-                <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, padding: '5px 8px', borderRadius: 6, background: '#F8FAFC', cursor: 'pointer' }}>
+                <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, padding: '5px 8px', borderRadius: 6, background: 'var(--bb-surface-soft)', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={rbacPerms[key]}

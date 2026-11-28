@@ -150,7 +150,7 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
             ))}
           </select>
           {mode !== 'udhaar' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F1F5F9', padding: '7px 12px', borderRadius: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bb-surface-soft)', padding: '7px 12px', borderRadius: 8 }}>
               <Search size={15} color="#64748B" />
               <input
                 value={query}
@@ -211,7 +211,7 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
                       </span>
                     </div>
 
-                    <div style={{ height: 6, background: '#E2E8F0', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: 6, background: 'var(--bb-surface-track)', borderRadius: 99, overflow: 'hidden' }}>
                       <div
                         style={{
                           width: `${Math.round(ratio * 100)}%`,
@@ -251,7 +251,7 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
                 key={bill.id}
                 style={{
                   border: '1px solid #FDE68A',
-                  background: '#FFFBEB',
+                  background: 'var(--bb-surface-soft)',
                   borderRadius: 10,
                   padding: 12,
                   display: 'flex',
@@ -261,7 +261,7 @@ export const StockAlertDrawer: React.FC<StockAlertDrawerProps> = ({
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 13.5, color: '#1E293B' }}>
+                  <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--bb-text-primary)' }}>
                     {bill.billNo} · {bill.customerName}
                   </div>
                   <div style={{ fontSize: 11.5, color: '#64748B' }}>

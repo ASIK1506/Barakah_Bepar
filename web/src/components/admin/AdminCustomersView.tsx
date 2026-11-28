@@ -592,10 +592,10 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
             </div>
 
             {matchedBill ? (
-              <div style={{ border: '1px solid #CBD5E1', borderRadius: 12, padding: 16, background: '#F8FAFC' }}>
+              <div style={{ border: '1px solid #CBD5E1', borderRadius: 12, padding: 16, background: 'var(--bb-surface-soft)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                   <div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#1F4E63' }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--bb-accent-link)' }}>
                       Bill #{matchedBill.billNo} — {matchedBill.customerName}
                     </div>
                     <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>
@@ -664,7 +664,7 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
                     <div style={{ fontWeight: 600 }}>{p.customerName}</div>
                     <div style={{ fontSize: 11, color: '#64748B' }}>{p.customerPhone}</div>
                   </td>
-                  <td style={{ fontWeight: 600, color: '#1F4E63' }}>{p.billNo}</td>
+                  <td style={{ fontWeight: 600, color: 'var(--bb-accent-link)' }}>{p.billNo}</td>
                   <td>
                     <span style={{ padding: '2px 8px', borderRadius: 6, background: '#E0F2FE', color: '#0369A1', fontSize: 11.5, fontWeight: 700 }}>
                       {p.method}
@@ -696,7 +696,7 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
               </button>
             </div>
 
-            <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 10, padding: '10px 12px', marginBottom: 14 }}>
+            <div className="bb-udhaar-row" style={{ border: '1px solid #FCD34D', borderRadius: 10, padding: '10px 12px', marginBottom: 14 }}>
               <div style={{ fontWeight: 700, fontSize: 14 }}>{collectCust.name}</div>
               <div style={{ fontSize: 12, color: '#64748B' }}>Phone: {collectCust.phone1}</div>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#B45309', marginTop: 4 }}>
@@ -911,7 +911,7 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
                   <input type="number" min="0" value={udharPaidNow} onChange={e => setUdharPaidNow(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
                 </div>
               </div>
-              <div style={{ background: '#FFFBEB', padding: 10, borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#B45309' }}>
+              <div className="bb-udhaar-row" style={{ padding: 10, borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#B45309' }}>
                 Pending Udhar Added: {formatINR(Math.max(0, (Number(udharBillTotal) || 0) - (Number(udharPaidNow) || 0)))}
               </div>
               {Number(udharPaidNow) > 0 && (

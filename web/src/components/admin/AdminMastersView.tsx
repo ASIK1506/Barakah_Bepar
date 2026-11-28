@@ -365,7 +365,7 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
             <tbody>
               {filteredProducts.map(p => (
                 <tr key={p.id}>
-                  <td style={{ fontWeight: 700, color: '#1F4E63' }}>#{p.code}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--bb-accent-link)' }}>#{p.code}</td>
                   <td>
                     <div style={{ fontWeight: 700 }}>{p.name}</div>
                     <div style={{ fontSize: 11.5, color: '#64748B' }}>{p.tamilName} · {p.barcode}</div>
@@ -556,7 +556,7 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
                   <td style={{ fontWeight: 700 }}>{t.name}</td>
                   <td>{t.cgst}%</td>
                   <td>{t.sgst}%</td>
-                  <td style={{ fontWeight: 700, color: '#1F4E63' }}>{t.cgst + t.sgst}%</td>
+                  <td style={{ fontWeight: 700, color: 'var(--bb-accent-link)' }}>{t.cgst + t.sgst}%</td>
                   <td>{t.cess}%</td>
                 </tr>
               ))}
@@ -572,8 +572,8 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
             <h3 style={{ margin: '0 0 12px 0', fontSize: 15.5, fontWeight: 700 }}>Cash Drawer Denomination Counter</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
               {[500, 200, 100, 50, 20, 10, 5, 2, 1].map(denom => (
-                <div key={denom} style={{ border: '1px solid #E2E8F0', borderRadius: 8, padding: 8, background: '#F8FAFC' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1F4E63' }}>₹{denom} ×</div>
+                <div key={denom} style={{ border: '1px solid var(--bb-border-soft)', borderRadius: 8, padding: 8, background: 'var(--bb-surface-soft)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--bb-accent-link)' }}>₹{denom} ×</div>
                   <input
                     type="number"
                     min="0"
@@ -608,8 +608,8 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#E6F4F1', padding: 12, borderRadius: 10 }}>
               <div>
-                <div style={{ fontSize: 11.5, color: '#475569' }}>Drawer Cash: {formatINR(notesTotal)}</div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: '#1F4E63' }}>Net Closing: {formatINR(netCashClosing)}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--bb-text-secondary)' }}>Drawer Cash: {formatINR(notesTotal)}</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--bb-accent-link)' }}>Net Closing: {formatINR(netCashClosing)}</div>
               </div>
               <button className="bb-btn-primary" onClick={handleSaveDenomination}>Save Day-End Tally</button>
             </div>
@@ -736,7 +736,7 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
         >
           <div className="bb-card" style={{ width: 'min(540px, 94vw)', maxHeight: '88vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <div className="bb-no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <strong style={{ fontSize: 15.5, color: '#1F4E63' }}>Barcode Sticker Print: {barcodeProd.name}</strong>
+              <strong style={{ fontSize: 15.5, color: 'var(--bb-accent-link)' }}>Barcode Sticker Print: {barcodeProd.name}</strong>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <input type="number" min="1" max="24" value={labelQty} onChange={e => setLabelQty(e.target.value)} style={{ width: 60, padding: '5px 8px', borderRadius: 6, border: '1px solid #CBD5E1' }} />
                 <button className="bb-btn-primary" onClick={() => window.print()}><Printer size={14} /> Print Labels</button>

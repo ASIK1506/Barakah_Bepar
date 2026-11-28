@@ -401,7 +401,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               maxHeight: '88vh',
               borderRadius: 28,
               border: '8px solid #0F172A',
-              background: '#F1F5F9',
+              background: 'var(--bb-surface-soft)',
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
@@ -411,7 +411,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           >
             <div style={{ background: '#1F4E63', color: '#FFFFFF', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700 }}>Barakah Owner Live</div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>Deen Stores Owner Live</div>
                 <div style={{ fontSize: 11, opacity: 0.8 }}>Private Company App · {store.shops.length} Active Shop(s)</div>
               </div>
               <button onClick={() => setMobilePreviewOpen(false)} style={{ border: 'none', background: 'rgba(255,255,255,0.18)', color: '#FFF', borderRadius: 99, padding: 5, cursor: 'pointer' }}>
@@ -430,8 +430,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 return (
                   <div key={shop.id} style={{ background: '#FFFFFF', borderRadius: 12, padding: 12, border: '1px solid #CBD5E1' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <strong style={{ fontSize: 13.5, color: '#1F4E63' }}>{shop.code} · {shop.name}</strong>
-                      <span style={{ fontSize: 10.5, background: '#DCFCE7', color: '#166534', padding: '2px 7px', borderRadius: 99, fontWeight: 700 }}>LIVE</span>
+                      <strong style={{ fontSize: 13.5, color: 'var(--bb-accent-link)' }}>{shop.code} · {shop.name}</strong>
+                      <span className="bb-status-badge-green" style={{ fontSize: 10.5, padding: '2px 7px', borderRadius: 99, fontWeight: 700 }}>LIVE</span>
                     </div>
                     <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>{formatINR(tSales)}</div>
                     <div style={{ fontSize: 11, color: '#64748B' }}>Today ({tBills.length} bills) · Cash {formatINR(cashAmt)} · UPI {formatINR(upiAmt)}</div>
