@@ -177,7 +177,7 @@ export const AdminShopsView: React.FC<{
         icon: 'whatsapp',
         onClick: () => {
           const msg = encodeURIComponent(
-            `*Barakah HQ Stock Allocation (${refNo})*\nShop: ${shop.name}\nItem: ${prod.name}\nQty Issued: *${qty} ${prod.unit}*\nNew Shop Stock: ${nextShopQty} ${prod.unit}`
+            `*Deen Stores Stock Allocation (${refNo})*\nShop: ${shop.name}\nItem: ${prod.name}\nQty Issued: *${qty} ${prod.unit}*\nNew Shop Stock: ${nextShopQty} ${prod.unit}`
           );
           window.open(`https://wa.me/?text=${msg}`, '_blank');
         }

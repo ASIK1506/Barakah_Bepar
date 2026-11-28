@@ -1,7 +1,7 @@
 {
   "name": "barakah-bepaar-retail",
   "private": true,
-  "version": "1.7.3",
+  "version": "1.7.4",
   "description": "Barakah Bepaar - Retail Management Software [GST Version]",
   "main": "electron/main.cjs",
   "type": "module",

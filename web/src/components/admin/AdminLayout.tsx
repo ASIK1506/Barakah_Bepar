@@ -147,7 +147,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               </div>
             </div>
             <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 0.2 }}>
-              Barakah HQ ({currentUser.username})
+              Deen Stores ({currentUser.username})
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', marginTop: 2 }}>
               admin@barakahbepaar.in · {APP_VERSION_TAG}
@@ -178,7 +178,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             className="bb-logout-btn"
             onClick={() =>
               handleConfirm({
-                title: 'Sign Out of Barakah HQ?',
+                title: 'Sign Out of Deen Stores?',
                 message: 'Are you sure you want to exit the Admin HQ Dashboard and return to the Login screen?',
                 confirmLabel: 'Sign Out',
                 danger: false,
@@ -205,7 +205,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               </h1>
             ) : (
               <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>
-                Barakah Bepaar HQ &nbsp;/&nbsp; {navItems.find(n => n.id === activeTab)?.label}
+                Deen Stores HQ &nbsp;/&nbsp; {navItems.find(n => n.id === activeTab)?.label}
               </span>
             )}
           </div>
