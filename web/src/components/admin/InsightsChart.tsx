@@ -231,7 +231,7 @@ export const InsightsChart: React.FC<InsightsChartProps> = ({ bills, shops }) =>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
           {/* Shop-wise Selector */}
           <div className="bb-shop-filter-pill" title="Filter transactions by shop or overall">
-            <Store size={13} color="#1F4E63" />
+            <Store size={13} color="var(--bb-accent-link)" />
             <select
               value={selectedShopId}
               onChange={e => setSelectedShopId(e.target.value)}
@@ -282,7 +282,7 @@ export const InsightsChart: React.FC<InsightsChartProps> = ({ bills, shops }) =>
               marginLeft: 2
             }}
           >
-            <LegendDot color="#1F4E63" label="Bills (Count)" />
+            <LegendDot color="var(--bb-accent-link)" label="Bills (Count)" />
             {trafficView !== 'hourly' && <LegendDot color="#16A34A" label="Sales (₹)" />}
           </div>
         </div>
@@ -300,7 +300,7 @@ export const InsightsChart: React.FC<InsightsChartProps> = ({ bills, shops }) =>
                   barCategoryGap="18%"
                   margin={{ top: 14, right: 16, left: -16, bottom: 0 }}
                 >
-                  <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" vertical={false} />
+                  <CartesianGrid stroke="var(--bb-grid-stroke)" strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="hour"
                     stroke="#94A3B8"
@@ -349,7 +349,7 @@ export const InsightsChart: React.FC<InsightsChartProps> = ({ bills, shops }) =>
                   <Bar
                     dataKey="count"
                     name="Bills (Count)"
-                    fill="#1F4E63"
+                    fill="var(--bb-accent-link)"
                     radius={[6, 6, 0, 0]}
                     maxBarSize={38}
                     isAnimationActive={true}
@@ -369,7 +369,7 @@ export const InsightsChart: React.FC<InsightsChartProps> = ({ bills, shops }) =>
                       <stop offset="100%" stopColor="#1F4E63" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" vertical={false} />
+                  <CartesianGrid stroke="var(--bb-grid-stroke)" strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="day"
                     stroke="#94A3B8"
@@ -425,11 +425,11 @@ export const InsightsChart: React.FC<InsightsChartProps> = ({ bills, shops }) =>
                     type="monotone"
                     dataKey="count"
                     name="Bills (Count)"
-                    stroke="#1F4E63"
+                    stroke="var(--bb-accent-link)"
                     strokeWidth={2.5}
                     fill="url(#bbTrafficDailyGrad)"
-                    dot={{ r: 3.5, fill: '#1F4E63', strokeWidth: 0 }}
-                    activeDot={{ r: 6, fill: '#1F4E63', stroke: '#FFFFFF', strokeWidth: 2 }}
+                    dot={{ r: 3.5, fill: 'var(--bb-accent-link)', strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: 'var(--bb-accent-link)', stroke: '#FFFFFF', strokeWidth: 2 }}
                     isAnimationActive={true}
                     animationDuration={950}
                     animationEasing="ease-out"

@@ -6,18 +6,34 @@
    ============================================================================ */
 
 .bb-admin-root {
+  --bb-text-primary: #1E293B;
+  --bb-text-secondary: #334155;
+  --bb-text-muted: #64748B;
+  --bb-surface-soft: #F8FAFC;
+  --bb-surface-track: #EFF5F8;
+  --bb-border-soft: #CBD5E1;
+  --bb-accent-link: #1F4E63;
+  --bb-grid-stroke: #E2E8F0;
   display: flex;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
   background: #D6E8F0;
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-  color: #1E293B;
+  color: var(--bb-text-primary);
 }
 
 .bb-admin-root.dark-mode {
+  --bb-text-primary: #F1F5F9;
+  --bb-text-secondary: #CBD5E1;
+  --bb-text-muted: #94A3B8;
+  --bb-surface-soft: #0F172A;
+  --bb-surface-track: #334155;
+  --bb-border-soft: #334155;
+  --bb-accent-link: #38BDF8;
+  --bb-grid-stroke: #334155;
   background: #0F172A;
-  color: #E2E8F0;
+  color: var(--bb-text-primary);
 }
 
 /* 1. Left Deep Slate-Teal Sidebar */
@@ -240,6 +256,53 @@
   flex: 1;
   overflow-y: auto;
   padding: 0 28px 28px 28px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(31, 78, 99, 0.28) transparent;
+}
+
+/* Sleek modern scrollbars across Admin UI (Light + Dark mode) */
+.bb-admin-root * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(31, 78, 99, 0.25) transparent;
+}
+
+.bb-admin-root.dark-mode *,
+.bb-admin-root.dark-mode .bb-content-scroll {
+  scrollbar-color: rgba(148, 163, 184, 0.32) transparent;
+}
+
+.bb-admin-root ::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.bb-admin-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bb-admin-root ::-webkit-scrollbar-thumb {
+  background: rgba(31, 78, 99, 0.26);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.bb-admin-root ::-webkit-scrollbar-thumb:hover {
+  background: rgba(31, 78, 99, 0.48);
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+
+.bb-admin-root.dark-mode ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.32);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.bb-admin-root.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.55);
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 
 /* 3. Cards & Interactive Hover Lift (Skywalk pattern) */
@@ -378,6 +441,142 @@
 
 .bb-btn-outline:hover {
   background: #EEF6FA;
+}
+
+.bb-admin-root.dark-mode .bb-btn-outline:hover {
+  background: #334155;
+  color: #F8FAFC;
+}
+
+.bb-admin-root.dark-mode .bb-table tbody tr:hover {
+  background: rgba(51, 65, 85, 0.42);
+}
+
+.bb-admin-root.dark-mode .bb-kpi-tile:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  border-color: #475569;
+}
+
+.bb-admin-root.dark-mode input:not(.bb-search-pill input),
+.bb-admin-root.dark-mode select,
+.bb-admin-root.dark-mode textarea {
+  background-color: #0F172A !important;
+  color: #F1F5F9 !important;
+  border-color: #334155 !important;
+}
+
+.bb-admin-root.dark-mode select option {
+  background-color: #1E293B;
+  color: #F1F5F9;
+}
+
+/* Semantic badges & row helpers for Light + Dark mode */
+.bb-status-badge-green {
+  background: #DCFCE7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.bb-admin-root.dark-mode .bb-status-badge-green {
+  background: rgba(34, 197, 94, 0.16);
+  color: #4ADE80;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.bb-kpi-tile-alert {
+  background: #FDF2EE;
+  border-color: #E5B6A5;
+}
+
+.bb-admin-root.dark-mode .bb-kpi-tile-alert {
+  background: rgba(154, 52, 18, 0.18);
+  border-color: rgba(251, 146, 60, 0.4);
+}
+
+.bb-customers-icon-box {
+  width: 44px;
+  height: 36px;
+  border-radius: 8px;
+  background: #D7E6EE;
+  border: 1px solid #93B5C6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1F4E63;
+  margin-bottom: 12px;
+}
+
+.bb-admin-root.dark-mode .bb-customers-icon-box {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.32);
+  color: #38BDF8;
+}
+
+.bb-udhaar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+}
+
+.bb-admin-root.dark-mode .bb-udhaar-row {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.bb-vendor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+}
+
+.bb-admin-root.dark-mode .bb-vendor-row {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.bb-peak-profit-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(45, 106, 79, 0.12);
+  color: #2D6A4F;
+}
+
+.bb-admin-root.dark-mode .bb-peak-profit-pill {
+  background: rgba(52, 211, 153, 0.15);
+  color: #6EE7B7;
+}
+
+.bb-peak-expense-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(194, 109, 74, 0.12);
+  color: #C26D4A;
+}
+
+.bb-admin-root.dark-mode .bb-peak-expense-pill {
+  background: rgba(251, 146, 60, 0.15);
+  color: #FDBA74;
 }
 
 /* 6. Slide-Over Alert Drawer (Skywalk StockAlertDrawer style) */

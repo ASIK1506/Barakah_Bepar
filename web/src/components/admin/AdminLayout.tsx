@@ -204,7 +204,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 Welcome {currentUser.username} !
               </h1>
             ) : (
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--bb-text-secondary)' }}>
                 Deen Stores HQ &nbsp;/&nbsp; {navItems.find(n => n.id === activeTab)?.label}
               </span>
             )}
@@ -230,7 +230,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               style={{ padding: '5px 11px', fontSize: 12, borderRadius: 999 }}
               title="Preview Owner Live Mobile View"
             >
-              <Smartphone size={14} color="#1F4E63" />
+              <Smartphone size={14} color="currentColor" />
               Owner Mobile
             </button>
 

@@ -101,16 +101,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <h2 style={{ margin: 0, fontSize: 16.5, fontWeight: 700 }}>Over View</h2>
-            <span
-              style={{
-                background: '#DCFCE7',
-                color: '#166534',
-                fontSize: 11,
-                fontWeight: 700,
-                padding: '3px 9px',
-                borderRadius: 999
-              }}
-            >
+            <span className="bb-status-badge-green">
               {store.shops.length} / {MAX_STANDARD_SHOPS} Shops Active
             </span>
           </div>
@@ -216,19 +207,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
           {/* 7. Out of Stock (Peach alert styling matching Screenshot 1 right tile) */}
           <div
-            className="bb-kpi-tile clickable"
-            style={{
-              background: outOfStockCount > 0 ? '#FDF2EE' : undefined,
-              borderColor: outOfStockCount > 0 ? '#E5B6A5' : undefined
-            }}
+            className={`bb-kpi-tile clickable ${outOfStockCount > 0 ? 'bb-kpi-tile-alert' : ''}`}
             onClick={() => onOpenAlertDrawer('out')}
           >
             <div className="bb-kpi-icon-box" style={{ background: '#F7D7CC', color: '#9A3412' }}>
               <PackageX size={19} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#1E293B' }}>{outOfStockCount}</div>
-              <div style={{ fontSize: 12, color: '#64748B' }}>Out of Stock</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--bb-text-primary)' }}>{outOfStockCount}</div>
+              <div style={{ fontSize: 12, color: 'var(--bb-text-muted)' }}>Out of Stock</div>
             </div>
             <ArrowUpRight size={14} color="#9A3412" />
           </div>
@@ -270,20 +257,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
 
               <div style={{ margin: '14px 0' }}>
-                <div
-                  style={{
-                    width: 44,
-                    height: 36,
-                    borderRadius: 8,
-                    background: '#D7E6EE',
-                    border: '1px solid #93B5C6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#1F4E63',
-                    marginBottom: 12
-                  }}
-                >
+                <div className="bb-customers-icon-box">
                   <Users size={19} />
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 800 }}>{store.customers.length} Active</div>
@@ -346,7 +320,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 style={{
                   border: 'none',
                   background: 'transparent',
-                  color: '#1F4E63',
+                  color: 'var(--bb-accent-link)',
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer'
@@ -372,7 +346,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <span
                       style={{
                         fontSize: 12.5,
-                        color: '#475569',
+                        color: 'var(--bb-text-secondary)',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis'
@@ -381,7 +355,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     >
                       {item.name}
                     </span>
-                    <div style={{ height: 10, background: '#EFF5F8', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: 10, background: 'var(--bb-surface-track)', borderRadius: 99, overflow: 'hidden' }}>
                       <div
                         style={{
                           width: `${widthPct}%`,
@@ -391,7 +365,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         }}
                       />
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, textAlign: 'right', color: '#334155' }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, textAlign: 'right', color: 'var(--bb-text-primary)' }}>
                       {formatINR(item.amount, true)}
                     </span>
                   </div>
@@ -405,7 +379,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             style={{
               marginTop: 18,
               paddingTop: 12,
-              borderTop: '1px dashed #CBD5E1',
+              borderTop: '1px dashed var(--bb-border-soft)',
               display: 'flex',
               justifyContent: 'space-between',
               fontSize: 12
@@ -444,7 +418,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <span style={{ fontSize: 15, fontWeight: 700 }}>Recent Transactions</span>
             <button
               onClick={() => onNavigate('orders')}
-              style={{ border: 'none', background: 'transparent', color: '#1F4E63', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+              style={{ border: 'none', background: 'transparent', color: 'var(--bb-accent-link)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
             >
               View All
             </button>
@@ -459,7 +433,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   alignItems: 'center',
                   padding: '8px 10px',
                   borderRadius: 8,
-                  background: '#F8FAFC',
+                  background: 'var(--bb-surface-soft)',
+                  border: '1px solid var(--bb-border-soft)',
                   cursor: 'pointer'
                 }}
                 onClick={() => onNavigate('orders', bill.billNo)}
@@ -493,15 +468,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               .map(b => (
                 <div
                   key={b.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '8px 10px',
-                    borderRadius: 8,
-                    background: '#FFFBEB',
-                    border: '1px solid #FDE68A'
-                  }}
+                  className="bb-udhaar-row"
                 >
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{b.billNo} — {b.customerName}</div>
@@ -523,15 +490,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               .map(v => (
                 <div
                   key={v.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '8px 10px',
-                    borderRadius: 8,
-                    background: '#FEF2F2',
-                    border: '1px solid #FECACA'
-                  }}
+                  className="bb-vendor-row"
                 >
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>Vendor: {v.name}</div>

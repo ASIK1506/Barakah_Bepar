@@ -159,38 +159,14 @@ export const ExpenseProfitAreaChart: React.FC<{ data: ExpenseProfitPoint[] }> = 
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {peakProfit && (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                fontSize: 11,
-                fontWeight: 600,
-                padding: '3px 9px',
-                borderRadius: 999,
-                background: 'rgba(45, 106, 79, 0.12)',
-                color: '#2D6A4F'
-              }}
-            >
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#2D6A4F' }} />
+            <span className="bb-peak-profit-pill">
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor' }} />
               Highest Profit: {peakProfit.month} ({formatINR(peakProfit.profit, true)})
             </span>
           )}
           {peakExpense && (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                fontSize: 11,
-                fontWeight: 600,
-                padding: '3px 9px',
-                borderRadius: 999,
-                background: 'rgba(194, 109, 74, 0.12)',
-                color: '#C26D4A'
-              }}
-            >
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C26D4A' }} />
+            <span className="bb-peak-expense-pill">
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor' }} />
               Highest Expense: {peakExpense.month} ({formatINR(peakExpense.expense, true)})
             </span>
           )}
@@ -212,16 +188,16 @@ export const ExpenseProfitAreaChart: React.FC<{ data: ExpenseProfitPoint[] }> = 
                   <stop offset="100%" stopColor="#C26D4A" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid stroke="var(--bb-grid-stroke)" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="month"
-                stroke="#64748B"
+                stroke="var(--bb-text-muted)"
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                stroke="#64748B"
+                stroke="var(--bb-text-muted)"
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
@@ -349,13 +325,13 @@ export const TurnoverSplineChart: React.FC<{ data: { label: string; value: numbe
           y1={padT}
           x2={getX(i)}
           y2={padT + innerH}
-          stroke="#CBD5E1"
+          stroke="var(--bb-grid-stroke)"
           strokeDasharray="4 4"
         />
       ))}
 
       {yTicks.map((t, i) => (
-        <text key={`yt-${i}`} x={padL - 10} y={getY(t) + 3} textAnchor="end" fontSize="10.5" fill="#475569">
+        <text key={`yt-${i}`} x={padL - 10} y={getY(t) + 3} textAnchor="end" fontSize="10.5" fill="var(--bb-text-muted)">
           {t >= 100000 ? `${(t / 100000).toFixed(1)}L` : `${Math.round(t / 1000)}K`}
         </text>
       ))}
@@ -372,7 +348,7 @@ export const TurnoverSplineChart: React.FC<{ data: { label: string; value: numbe
             stroke="#3D6B5E"
             strokeWidth="2.5"
           />
-          <text x={pt.x} y={height - 6} textAnchor="middle" fontSize="11" fill="#334155">
+          <text x={pt.x} y={height - 6} textAnchor="middle" fontSize="11" fill="var(--bb-text-secondary)">
             {data[i].label}
           </text>
         </g>
@@ -435,17 +411,17 @@ export const AccuracyGaugeChart: React.FC<{ percent: number }> = ({ percent }) =
         />
         {/* Needle */}
         <g transform={`rotate(${angle} ${cx} ${cy})`}>
-          <line x1={cx} y1={cy} x2={cx} y2={cy - 54} stroke="#1E293B" strokeWidth="3" strokeLinecap="round" />
+          <line x1={cx} y1={cy} x2={cx} y2={cy - 54} stroke="var(--bb-text-primary)" strokeWidth="3" strokeLinecap="round" />
         </g>
-        <circle cx={cx} cy={cy} r="6" fill="#1E293B" />
-        <text x={cx - r} y={cy + 16} textAnchor="middle" fontSize="10" fill="#64748B">
+        <circle cx={cx} cy={cy} r="6" fill="var(--bb-text-primary)" />
+        <text x={cx - r} y={cy + 16} textAnchor="middle" fontSize="10" fill="var(--bb-text-muted)">
           0%
         </text>
-        <text x={cx + r} y={cy + 16} textAnchor="middle" fontSize="10" fill="#64748B">
+        <text x={cx + r} y={cy + 16} textAnchor="middle" fontSize="10" fill="var(--bb-text-muted)">
           100%
         </text>
       </svg>
-      <div style={{ fontSize: 22, fontWeight: 700, color: '#1E293B', marginTop: -4 }}>
+      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--bb-text-primary)', marginTop: -4 }}>
         {clamped}%
       </div>
     </div>
