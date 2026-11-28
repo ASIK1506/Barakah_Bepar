@@ -2555,110 +2555,7 @@ export const AdminSettingsView: React.FC<{
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 18 }}>
-      {/* Shop Staff Logins + RBAC */}
-      <div className="bb-card">
-        <h3 style={{ margin: '0 0 10px 0', fontSize: 16, fontWeight: 700 }}>Shop & Admin Logins (RBAC)</h3>
-        <div style={{ fontSize: 12, color: '#64748B', marginBottom: 12 }}>
-          Admin accounts open Modern HQ UI · Shop accounts open Classic Vanigam POS UI
-        </div>
-        <form onSubmit={handleAddShopLogin} style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-          <input value={newUser} onChange={e => setNewUser(e.target.value)} placeholder="Username (SHOP2)" style={{ flex: 1, minWidth: 110, padding: 7, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
-          <input value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Password" style={{ flex: 1, minWidth: 100, padding: 7, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
-          <select value={newLevel} onChange={e => setNewLevel(e.target.value as 'User' | 'Administrator')} style={{ padding: 7, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }}>
-            <option value="User">Shop POS</option>
-            <option value="Administrator">HQ Admin</option>
-          </select>
-          <button type="submit" className="bb-btn-primary">Add</button>
-        </form>
-        <table className="bb-table">
-          <thead>
-            <tr><th>Username</th><th>Password</th><th>Role / UI</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {users.map(u => (
-              <tr key={u.username}>
-                <td style={{ fontWeight: 700 }}>{u.username}</td>
-                <td>
-                  {editingPassUser === u.username ? (
-                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <input
-                        value={editingPassVal}
-                        onChange={e => setEditingPassVal(e.target.value)}
-                        style={{ width: 80, padding: '3px 6px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 12 }}
-                      />
-                      <button
-                        className="bb-btn-primary"
-                        style={{ padding: '3px 8px', fontSize: 11 }}
-                        onClick={() => {
-                          if (!editingPassVal.trim()) return;
-                          const next = users.map(x =>
-                            x.username === u.username ? { ...x, password: editingPassVal.trim() } : x
-                          );
-                          saveUsers(next);
-                          setUsers(next);
-                          setEditingPassUser(null);
-                          onNotify?.({ type: 'success', title: 'Password Updated', message: `Password changed for ${u.username}.` });
-                        }}
-                      >
-                        Save
-                      </button>
-                    </div>
-                  ) : (
-                    <code
-                      style={{ cursor: 'pointer' }}
-                      title="Click Edit Password to update"
-                      onClick={() => {
-                        setEditingPassUser(u.username);
-                        setEditingPassVal(u.password);
-                      }}
-                    >
-                      {u.password}
-                    </code>
-                  )}
-                </td>
-                <td>{u.level === 'Administrator' ? 'Admin (Modern HQ)' : 'Shop (Classic POS)'}</td>
-                <td>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <button className="bb-btn-outline" style={{ padding: '3px 9px', fontSize: 11.5 }} onClick={() => openRbacModal(u)}>
-                      Configure
-                    </button>
-                    {u.username !== 'ADMIN' && (
-                      <button
-                        className="bb-btn-outline"
-                        style={{ padding: '3px 7px', fontSize: 11.5, color: '#B91C1C', borderColor: '#FCA5A5' }}
-                        title={`Delete user ${u.username}`}
-                        onClick={() => {
-                          const removeUser = () => {
-                            const next = users.filter(x => x.username !== u.username);
-                            saveUsers(next);
-                            setUsers(next);
-                            onNotify?.({ type: 'info', title: 'User Removed', message: `Login "${u.username}" deleted.` });
-                          };
-                          if (onConfirm) {
-                            onConfirm({
-                              title: `Delete Login "${u.username}"?`,
-                              message: `Revoke POS / Admin access for "${u.username}"?`,
-                              confirmLabel: 'Delete User',
-                              danger: true,
-                              onConfirm: removeUser
-                            });
-                          } else {
-                            removeUser();
-                          }
-                        }}
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 18, alignItems: 'start' }}>
       {/* Company Information & Receipt Header */}
       <div className="bb-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Company Information & GST Profile</h3>
@@ -2670,7 +2567,7 @@ export const AdminSettingsView: React.FC<{
           <label style={{ fontSize: 12, fontWeight: 600 }}>Address</label>
           <input value={companyAddr} onChange={e => setCompanyAddr(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600 }}>GSTIN</label>
             <input value={companyGstin} onChange={e => setCompanyGstin(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
@@ -2682,6 +2579,7 @@ export const AdminSettingsView: React.FC<{
         </div>
         <button
           className="bb-btn-primary"
+          style={{ justifyContent: 'center', marginTop: 4 }}
           onClick={() => {
             onUpdateStore({
               ...store,
@@ -2711,7 +2609,7 @@ export const AdminSettingsView: React.FC<{
               value={whatsappNo}
               onChange={e => setWhatsappNo(e.target.value)}
               placeholder="10-digit WhatsApp number"
-              style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13 }}
+              style={{ flex: 1, minWidth: 0, padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13 }}
             />
             <button
               className="bb-btn-primary"
@@ -2725,14 +2623,14 @@ export const AdminSettingsView: React.FC<{
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 8, borderTop: '1px dashed #CBD5E1' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 10, borderTop: '1px dashed var(--bb-border-soft)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <button className="bb-btn-outline" style={{ justifyContent: 'center' }} onClick={handleDownloadJsonBackup}>
-              <Download size={14} /> Download Backup
+            <button className="bb-btn-outline" style={{ justifyContent: 'center', whiteSpace: 'nowrap' }} onClick={handleDownloadJsonBackup}>
+              <Download size={14} /> Backup JSON
             </button>
             <button
               className="bb-btn-outline"
-              style={{ justifyContent: 'center' }}
+              style={{ justifyContent: 'center', whiteSpace: 'nowrap' }}
               onClick={() => restoreInputRef.current?.click()}
             >
               <Upload size={14} /> Restore JSON
@@ -2747,7 +2645,7 @@ export const AdminSettingsView: React.FC<{
           </div>
           <button
             className="bb-btn-outline"
-            style={{ color: '#B91C1C', borderColor: '#FCA5A5' }}
+            style={{ justifyContent: 'center', color: '#B91C1C', borderColor: '#FCA5A5' }}
             onClick={() => {
               if (onConfirm) {
                 onConfirm({
@@ -2767,13 +2665,168 @@ export const AdminSettingsView: React.FC<{
           >
             <RefreshCw size={15} /> Reset Demo Store Data
           </button>
-          <button className="bb-btn-outline" style={{ fontSize: 11.5, color: '#64748B' }} onClick={onPreviewClassicPos}>
-            <Monitor size={14} /> Open Cashier Classic POS Simulator (Internal QA)
+          <button className="bb-btn-outline" style={{ justifyContent: 'center', fontSize: 12, color: 'var(--bb-text-muted)' }} onClick={onPreviewClassicPos}>
+            <Monitor size={14} /> Open Cashier Classic POS Simulator (QA)
           </button>
         </div>
 
         <div style={{ fontSize: 11.5, color: 'var(--bb-text-muted)', background: 'var(--bb-surface-soft)', padding: 10, borderRadius: 8 }}>
           <strong>Demo Note:</strong> Running in local-first demo mode (<code>localStorage</code>). Backend PostgreSQL & multi-terminal server sync will be connected to client hosting post-approval.
+        </div>
+      </div>
+
+      {/* Shop Staff Logins + RBAC (Full Width Card so Configure & Actions never clip) */}
+      <div className="bb-card" style={{ gridColumn: '1 / -1' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Shop & Admin Logins (RBAC)</h3>
+            <div style={{ fontSize: 12, color: 'var(--bb-text-muted)', marginTop: 2 }}>
+              Admin accounts open Modern HQ UI · Shop accounts open Classic Vanigam POS UI · Click any password to edit
+            </div>
+          </div>
+
+          <form onSubmit={handleAddShopLogin} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input value={newUser} onChange={e => setNewUser(e.target.value)} placeholder="Username (e.g. SHOP2)" style={{ width: 155, padding: '7px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
+            <input value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Password" style={{ width: 130, padding: '7px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }} />
+            <select value={newLevel} onChange={e => setNewLevel(e.target.value as 'User' | 'Administrator')} style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 12.5 }}>
+              <option value="User">Shop POS</option>
+              <option value="Administrator">HQ Admin</option>
+            </select>
+            <button type="submit" className="bb-btn-primary">
+              <Plus size={14} /> Add User
+            </button>
+          </form>
+        </div>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table className="bb-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Role / UI</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u.username}>
+                  <td style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{u.username}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    {editingPassUser === u.username ? (
+                      <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                        <input
+                          value={editingPassVal}
+                          onChange={e => setEditingPassVal(e.target.value)}
+                          style={{ width: 100, padding: '4px 8px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 12 }}
+                        />
+                        <button
+                          className="bb-btn-primary"
+                          style={{ padding: '4px 10px', fontSize: 11.5 }}
+                          onClick={() => {
+                            if (!editingPassVal.trim()) return;
+                            const next = users.map(x =>
+                              x.username === u.username ? { ...x, password: editingPassVal.trim() } : x
+                            );
+                            saveUsers(next);
+                            setUsers(next);
+                            setEditingPassUser(null);
+                            onNotify?.({ type: 'success', title: 'Password Updated', message: `Password changed for ${u.username}.` });
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="bb-btn-outline"
+                          style={{ padding: '4px 8px', fontSize: 11.5 }}
+                          onClick={() => setEditingPassUser(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        <code style={{ background: 'var(--bb-surface-soft)', padding: '2px 8px', borderRadius: 5, fontSize: 12 }}>
+                          {u.password}
+                        </code>
+                        <button
+                          type="button"
+                          className="bb-btn-outline"
+                          style={{ padding: '2px 7px', fontSize: 11 }}
+                          title="Change Password"
+                          onClick={() => {
+                            setEditingPassUser(u.username);
+                            setEditingPassVal(u.password);
+                          }}
+                        >
+                          <Edit3 size={11} />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <span
+                      className={u.level === 'Administrator' ? 'bb-status-badge-green' : undefined}
+                      style={
+                        u.level === 'Administrator'
+                          ? undefined
+                          : {
+                              background: 'var(--bb-surface-soft)',
+                              color: 'var(--bb-text-secondary)',
+                              border: '1px solid var(--bb-border-soft)',
+                              fontSize: 11.5,
+                              fontWeight: 600,
+                              padding: '3px 10px',
+                              borderRadius: 999
+                            }
+                      }
+                    >
+                      {u.level === 'Administrator' ? 'Admin (Modern HQ)' : 'Shop (Classic POS)'}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
+                      <button
+                        className="bb-btn-outline"
+                        style={{ padding: '5px 12px', fontSize: 12, whiteSpace: 'nowrap' }}
+                        onClick={() => openRbacModal(u)}
+                      >
+                        Configure
+                      </button>
+                      {u.username !== 'ADMIN' && (
+                        <button
+                          className="bb-btn-outline"
+                          style={{ padding: '5px 9px', fontSize: 12, color: '#B91C1C', borderColor: '#FCA5A5' }}
+                          title={`Delete user ${u.username}`}
+                          onClick={() => {
+                            const removeUser = () => {
+                              const next = users.filter(x => x.username !== u.username);
+                              saveUsers(next);
+                              setUsers(next);
+                              onNotify?.({ type: 'info', title: 'User Removed', message: `Login "${u.username}" deleted.` });
+                            };
+                            if (onConfirm) {
+                              onConfirm({
+                                title: `Delete Login "${u.username}"?`,
+                                message: `Revoke POS / Admin access for "${u.username}"?`,
+                                confirmLabel: 'Delete User',
+                                danger: true,
+                                onConfirm: removeUser
+                              });
+                            } else {
+                              removeUser();
+                            }
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

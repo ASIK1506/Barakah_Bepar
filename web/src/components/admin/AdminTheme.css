@@ -5,6 +5,13 @@
    Strictly isolated to .bb-admin-root so Classic Shop POS CSS is untouched.
    ============================================================================ */
 
+.bb-admin-root,
+.bb-admin-root *,
+.bb-admin-root *::before,
+.bb-admin-root *::after {
+  box-sizing: border-box;
+}
+
 .bb-admin-root {
   --bb-text-primary: #1E293B;
   --bb-text-secondary: #334155;
@@ -310,6 +317,7 @@
   background: #FFFFFF;
   border-radius: 14px;
   padding: 18px 20px;
+  min-width: 0;
   box-shadow: 0 2px 10px rgba(15, 45, 62, 0.05);
   border: 1px solid rgba(148, 179, 196, 0.25);
 }
