@@ -16,7 +16,9 @@ import {
   Printer,
   RotateCcw,
   FileText,
-  Clock
+  Clock,
+  Trash2,
+  Upload
 } from 'lucide-react';
 import {
   AdminStoreData,
@@ -714,6 +716,23 @@ export const AdminInventoryView: React.FC<{
               style={{ fontSize: 12 }}
             >
               {lowStockOnly ? 'Showing Low Stock Only' : 'Low Stock Alerts Filter'}
+            </button>
+            <button
+              className="bb-btn-outline"
+              style={{ fontSize: 12 }}
+              onClick={() => {
+                exportRowsToCSV(
+                  `Barakah_Stock_${new Date().toISOString().slice(0, 10)}.csv`,
+                  ['Code', 'Product', 'Category', 'Unit', 'Box Size', 'Shop Stock', 'HQ Central Stock', 'Retail Rate', 'Wholesale Rate', 'Stock Value'],
+                  filteredProducts.map(p => {
+                    const qty = shopFilter === 'all' ? p.currentStock : p.shopStocks[shopFilter] ?? 0;
+                    return [p.code, p.name, p.category, p.unit, p.boxSize, qty, p.centralStock, p.rate, p.wholesaleRate, Math.round(qty * p.rate)];
+                  })
+                );
+                onNotify?.({ type: 'success', title: 'Stock CSV Exported', message: `Exported ${filteredProducts.length} SKUs.` });
+              }}
+            >
+              <Download size={13} /> Export CSV
             </button>
           </div>
         </div>
@@ -1710,9 +1729,25 @@ export const AdminPurchaseView: React.FC<{
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div className="bb-card">
-        <h2 style={{ margin: '0 0 12px 0', fontSize: 16.5, fontWeight: 700 }}>
-          Wholesale Purchase Inward (Box / Bag → Base Units & Margin)
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
+          <h2 style={{ margin: 0, fontSize: 16.5, fontWeight: 700 }}>
+            Wholesale Purchase Inward (Box / Bag → Base Units & Margin)
+          </h2>
+          <button
+            className="bb-btn-outline"
+            style={{ fontSize: 12 }}
+            onClick={() => {
+              exportRowsToCSV(
+                `Barakah_Purchases_${new Date().toISOString().slice(0, 10)}.csv`,
+                ['Invoice No', 'Date', 'Supplier', 'Product', 'Pack Type', 'Packs', 'Units Added', 'Cost/Unit', 'Total', 'Paid', 'Destination'],
+                store.purchases.map(p => [p.invoiceNo, p.date, p.vendorName, p.productName, p.packType, p.packCount, p.totalUnitsAdded, p.costPerUnit, p.totalAmount, p.paidAmount, p.targetLocation])
+              );
+              onNotify?.({ type: 'success', title: 'Purchases CSV Exported', message: `Exported ${store.purchases.length} inward records.` });
+            }}
+          >
+            <Download size={13} /> Export Purchases CSV
+          </button>
+        </div>
 
         <form onSubmit={handleRecordPurchase} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
           <div>
@@ -2430,6 +2465,47 @@ export const AdminSettingsView: React.FC<{
   const [companyPhone, setCompanyPhone] = useState(store.company?.phone || '');
   const [rbacUser, setRbacUser] = useState<UserAccount | null>(null);
   const [rbacPerms, setRbacPerms] = useState<UserPermissions | null>(null);
+  const [editingPassUser, setEditingPassUser] = useState<string | null>(null);
+  const [editingPassVal, setEditingPassVal] = useState('');
+  const restoreInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleRestoreJsonBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result || '')) as AdminStoreData;
+        if (!parsed || !Array.isArray(parsed.shops) || !Array.isArray(parsed.products) || !Array.isArray(parsed.bills)) {
+          onNotify?.({ type: 'error', title: 'Invalid Backup File', message: 'Selected JSON is not a valid Barakah Bepaar backup.' });
+          return;
+        }
+        const applyRestore = () => {
+          onUpdateStore(parsed);
+          onNotify?.({
+            type: 'success',
+            title: 'Backup Restored Successfully',
+            message: `Loaded ${parsed.shops.length} shop(s), ${parsed.products.length} products, and ${parsed.bills.length} bills.`
+          });
+        };
+        if (onConfirm) {
+          onConfirm({
+            title: 'Restore Store From JSON Backup?',
+            message: `Replace current data with snapshot "${file.name}" (${parsed.products.length} products, ${parsed.bills.length} bills)?`,
+            confirmLabel: 'Restore Backup',
+            danger: true,
+            onConfirm: applyRestore
+          });
+        } else {
+          applyRestore();
+        }
+      } catch {
+        onNotify?.({ type: 'error', title: 'JSON Parse Failed', message: 'Could not read the selected backup file.' });
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const handleAddShopLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2497,18 +2573,85 @@ export const AdminSettingsView: React.FC<{
         </form>
         <table className="bb-table">
           <thead>
-            <tr><th>Username</th><th>Password</th><th>Role / UI</th><th>Permissions</th></tr>
+            <tr><th>Username</th><th>Password</th><th>Role / UI</th><th>Actions</th></tr>
           </thead>
           <tbody>
             {users.map(u => (
               <tr key={u.username}>
                 <td style={{ fontWeight: 700 }}>{u.username}</td>
-                <td><code>{u.password}</code></td>
+                <td>
+                  {editingPassUser === u.username ? (
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      <input
+                        value={editingPassVal}
+                        onChange={e => setEditingPassVal(e.target.value)}
+                        style={{ width: 80, padding: '3px 6px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 12 }}
+                      />
+                      <button
+                        className="bb-btn-primary"
+                        style={{ padding: '3px 8px', fontSize: 11 }}
+                        onClick={() => {
+                          if (!editingPassVal.trim()) return;
+                          const next = users.map(x =>
+                            x.username === u.username ? { ...x, password: editingPassVal.trim() } : x
+                          );
+                          saveUsers(next);
+                          setUsers(next);
+                          setEditingPassUser(null);
+                          onNotify?.({ type: 'success', title: 'Password Updated', message: `Password changed for ${u.username}.` });
+                        }}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  ) : (
+                    <code
+                      style={{ cursor: 'pointer' }}
+                      title="Click Edit Password to update"
+                      onClick={() => {
+                        setEditingPassUser(u.username);
+                        setEditingPassVal(u.password);
+                      }}
+                    >
+                      {u.password}
+                    </code>
+                  )}
+                </td>
                 <td>{u.level === 'Administrator' ? 'Admin (Modern HQ)' : 'Shop (Classic POS)'}</td>
                 <td>
-                  <button className="bb-btn-outline" style={{ padding: '3px 9px', fontSize: 11.5 }} onClick={() => openRbacModal(u)}>
-                    Configure
-                  </button>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button className="bb-btn-outline" style={{ padding: '3px 9px', fontSize: 11.5 }} onClick={() => openRbacModal(u)}>
+                      Configure
+                    </button>
+                    {u.username !== 'ADMIN' && (
+                      <button
+                        className="bb-btn-outline"
+                        style={{ padding: '3px 7px', fontSize: 11.5, color: '#B91C1C', borderColor: '#FCA5A5' }}
+                        title={`Delete user ${u.username}`}
+                        onClick={() => {
+                          const removeUser = () => {
+                            const next = users.filter(x => x.username !== u.username);
+                            saveUsers(next);
+                            setUsers(next);
+                            onNotify?.({ type: 'info', title: 'User Removed', message: `Login "${u.username}" deleted.` });
+                          };
+                          if (onConfirm) {
+                            onConfirm({
+                              title: `Delete Login "${u.username}"?`,
+                              message: `Revoke POS / Admin access for "${u.username}"?`,
+                              confirmLabel: 'Delete User',
+                              danger: true,
+                              onConfirm: removeUser
+                            });
+                          } else {
+                            removeUser();
+                          }
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -2583,9 +2726,25 @@ export const AdminSettingsView: React.FC<{
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 8, borderTop: '1px dashed #CBD5E1' }}>
-          <button className="bb-btn-outline" onClick={handleDownloadJsonBackup}>
-            <Download size={15} /> Download Full Store JSON Backup
-          </button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <button className="bb-btn-outline" style={{ justifyContent: 'center' }} onClick={handleDownloadJsonBackup}>
+              <Download size={14} /> Download Backup
+            </button>
+            <button
+              className="bb-btn-outline"
+              style={{ justifyContent: 'center' }}
+              onClick={() => restoreInputRef.current?.click()}
+            >
+              <Upload size={14} /> Restore JSON
+            </button>
+            <input
+              ref={restoreInputRef}
+              type="file"
+              accept=".json,application/json"
+              style={{ display: 'none' }}
+              onChange={handleRestoreJsonBackup}
+            />
+          </div>
           <button
             className="bb-btn-outline"
             style={{ color: '#B91C1C', borderColor: '#FCA5A5' }}

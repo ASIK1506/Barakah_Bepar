@@ -289,6 +289,27 @@ export const TurnoverSplineChart: React.FC<{ data: { label: string; value: numbe
     });
     return maxI;
   });
+  const [revealed, setRevealed] = useState(false);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) {
+      setRevealed(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          setRevealed(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   const width = 540;
   const height = 195;
@@ -317,7 +338,7 @@ export const TurnoverSplineChart: React.FC<{ data: { label: string; value: numbe
   const activePt = data[hoverIdx] || data[0];
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+    <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
       {data.map((_, i) => (
         <line
           key={`vg-${i}`}
@@ -336,17 +357,26 @@ export const TurnoverSplineChart: React.FC<{ data: { label: string; value: numbe
         </text>
       ))}
 
-      <path d={path} fill="none" stroke="#3D6B5E" strokeWidth="2.8" />
+      <path
+        d={path}
+        fill="none"
+        stroke="#3D6B5E"
+        strokeWidth="2.8"
+        strokeDasharray="900"
+        strokeDashoffset={revealed ? 0 : 900}
+        style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1)' }}
+      />
 
       {pts.map((pt, i) => (
         <g key={i} style={{ cursor: 'pointer' }} onMouseEnter={() => setHoverIdx(i)}>
           <circle
             cx={pt.x}
             cy={pt.y}
-            r={hoverIdx === i ? 6 : 4.5}
+            r={revealed ? (hoverIdx === i ? 6.5 : 4.5) : 0}
             fill="#FFFFFF"
             stroke="#3D6B5E"
             strokeWidth="2.5"
+            style={{ transition: `r 0.35s ease ${i * 75}ms` }}
           />
           <text x={pt.x} y={height - 6} textAnchor="middle" fontSize="11" fill="var(--bb-text-secondary)">
             {data[i].label}
@@ -354,7 +384,7 @@ export const TurnoverSplineChart: React.FC<{ data: { label: string; value: numbe
         </g>
       ))}
 
-      {activePt && pts[hoverIdx] && (
+      {activePt && pts[hoverIdx] && revealed && (
         <g>
           <rect
             x={Math.min(Math.max(pts[hoverIdx].x - 36, padL), width - 78)}
@@ -384,14 +414,36 @@ export const TurnoverSplineChart: React.FC<{ data: { label: string; value: numbe
    4. SEMI-CIRCULAR ACCURACY GAUGE (Matches Screenshot 2 Right Card)
    ============================================================================ */
 export const AccuracyGaugeChart: React.FC<{ percent: number }> = ({ percent }) => {
+  const [revealed, setRevealed] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) {
+      setRevealed(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          setRevealed(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   const clamped = Math.max(0, Math.min(100, percent));
-  const angle = -90 + (clamped / 100) * 180;
+  const angle = revealed ? -90 + (clamped / 100) * 180 : -90;
   const cx = 90;
   const cy = 84;
   const r = 62;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div ref={wrapRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <svg width="180" height="104" viewBox="0 0 180 104">
         {/* Left Amber/Terracotta Segment */}
         <path
@@ -410,7 +462,10 @@ export const AccuracyGaugeChart: React.FC<{ percent: number }> = ({ percent }) =
           strokeLinecap="butt"
         />
         {/* Needle */}
-        <g transform={`rotate(${angle} ${cx} ${cy})`}>
+        <g
+          transform={`rotate(${angle} ${cx} ${cy})`}
+          style={{ transition: 'transform 0.95s cubic-bezier(0.22, 1, 0.36, 1)' }}
+        >
           <line x1={cx} y1={cy} x2={cx} y2={cy - 54} stroke="var(--bb-text-primary)" strokeWidth="3" strokeLinecap="round" />
         </g>
         <circle cx={cx} cy={cy} r="6" fill="var(--bb-text-primary)" />

@@ -57,22 +57,26 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
   const [pShopStock, setPShopStock] = useState('40');
   const [pLowThresh, setPLowThresh] = useState('15');
   const [pBarcode, setPBarcode] = useState('');
+  const [pTaxSlabId, setPTaxSlabId] = useState('TAX-5');
 
   // Barcode sticker modal
   const [barcodeProd, setBarcodeProd] = useState<AdminProduct | null>(null);
   const [labelQty, setLabelQty] = useState('6');
 
   // Category CRUD state
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [catName, setCatName] = useState('');
   const [catTamil, setCatTamil] = useState('');
   const [catDesc, setCatDesc] = useState('');
 
   // Supplier CRUD state
+  const [editingSupId, setEditingSupId] = useState<string | null>(null);
   const [supName, setSupName] = useState('');
   const [supPhone, setSupPhone] = useState('');
   const [supCategory, setSupCategory] = useState(store.categories?.[0]?.name || 'Groceries');
 
   // Tax Slab CRUD state
+  const [editingTaxId, setEditingTaxId] = useState<string | null>(null);
   const [taxName, setTaxName] = useState('');
   const [taxCgst, setTaxCgst] = useState('2.5');
   const [taxSgst, setTaxSgst] = useState('2.5');
@@ -124,6 +128,7 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
     setPShopStock('25');
     setPLowThresh('12');
     setPBarcode(`890100000${nextNum}`);
+    setPTaxSlabId(taxSlabs[1]?.id || taxSlabs[0]?.id || 'TAX-5');
     setProdModalOpen(true);
   };
 
@@ -144,6 +149,7 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
     setPShopStock(String(p.currentStock));
     setPLowThresh(String(p.lowStockThreshold));
     setPBarcode(p.barcode);
+    setPTaxSlabId(p.taxSlabId || 'TAX-5');
     setProdModalOpen(true);
   };
 
@@ -180,6 +186,7 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
               currentStock: shopStockVal,
               lowStockThreshold: Number(pLowThresh) || 10,
               barcode: pBarcode.trim() || p.barcode,
+              taxSlabId: pTaxSlabId,
               shopStocks: { ...p.shopStocks, [shopId]: shopStockVal },
               extraRates: [
                 { id: 'r1', label: 'Retail Rate', rate: rateVal, unitNote: `Per ${pUnit}` },
@@ -220,6 +227,7 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
         centralStock: Number(pCentralStock) || 0,
         shopStocks: { [shopId]: shopStockVal },
         barcode: pBarcode.trim() || `89010000${pCode.trim()}`,
+        taxSlabId: pTaxSlabId,
         lastSoldDaysAgo: 0
       };
       onUpdateStore({ ...store, products: [newProd, ...store.products] });
@@ -235,18 +243,31 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!catName.trim()) return;
-    const created: AdminCategory = {
-      id: `cat-${Date.now()}`,
-      code: `CAT-${String(categories.length + 1).padStart(2, '0')}`,
-      name: catName.trim(),
-      tamilName: catTamil.trim() || catName.trim(),
-      description: catDesc.trim() || 'Custom product category'
-    };
-    onUpdateStore({ ...store, categories: [created, ...categories] });
+    if (editingCatId) {
+      onUpdateStore({
+        ...store,
+        categories: categories.map(c =>
+          c.id === editingCatId
+            ? { ...c, name: catName.trim(), tamilName: catTamil.trim() || catName.trim(), description: catDesc.trim() || c.description }
+            : c
+        )
+      });
+      onNotify({ type: 'success', title: 'Category Updated', message: `${catName.trim()} saved.` });
+      setEditingCatId(null);
+    } else {
+      const created: AdminCategory = {
+        id: `cat-${Date.now()}`,
+        code: `CAT-${String(categories.length + 1).padStart(2, '0')}`,
+        name: catName.trim(),
+        tamilName: catTamil.trim() || catName.trim(),
+        description: catDesc.trim() || 'Custom product category'
+      };
+      onUpdateStore({ ...store, categories: [created, ...categories] });
+      onNotify({ type: 'success', title: 'Category Added', message: `${created.name} is now available for products.` });
+    }
     setCatName('');
     setCatTamil('');
     setCatDesc('');
-    onNotify({ type: 'success', title: 'Category Added', message: `${created.name} is now available for products.` });
   };
 
   const handleAddSupplier = (e: React.FormEvent) => {
@@ -255,35 +276,61 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
       onNotify({ type: 'error', title: 'Missing Supplier Info', message: 'Enter both Supplier Name and Phone Number.' });
       return;
     }
-    const created: AdminVendor = {
-      id: `v-${Date.now()}`,
-      code: `SUP-${String(store.vendors.length + 1).padStart(2, '0')}`,
-      name: supName.trim(),
-      phone: supPhone.trim(),
-      category: supCategory,
-      totalPurchased: 0,
-      totalPaid: 0,
-      balanceDue: 0
-    };
-    onUpdateStore({ ...store, vendors: [created, ...store.vendors] });
+    if (editingSupId) {
+      onUpdateStore({
+        ...store,
+        vendors: store.vendors.map(v =>
+          v.id === editingSupId
+            ? { ...v, name: supName.trim(), phone: supPhone.trim(), category: supCategory }
+            : v
+        )
+      });
+      onNotify({ type: 'success', title: 'Supplier Updated', message: `${supName.trim()} details saved.` });
+      setEditingSupId(null);
+    } else {
+      const created: AdminVendor = {
+        id: `v-${Date.now()}`,
+        code: `SUP-${String(store.vendors.length + 1).padStart(2, '0')}`,
+        name: supName.trim(),
+        phone: supPhone.trim(),
+        category: supCategory,
+        totalPurchased: 0,
+        totalPaid: 0,
+        balanceDue: 0
+      };
+      onUpdateStore({ ...store, vendors: [created, ...store.vendors] });
+      onNotify({ type: 'success', title: 'Supplier Added', message: `${created.name} (${created.code}) added to Vendor Ledger.` });
+    }
     setSupName('');
     setSupPhone('');
-    onNotify({ type: 'success', title: 'Supplier Added', message: `${created.name} (${created.code}) added to Vendor Ledger.` });
   };
 
   const handleAddTaxSlab = (e: React.FormEvent) => {
     e.preventDefault();
     if (!taxName.trim()) return;
-    const created: AdminTaxSlab = {
-      id: `TAX-${Date.now()}`,
-      name: taxName.trim(),
-      cgst: Number(taxCgst) || 0,
-      sgst: Number(taxSgst) || 0,
-      cess: Number(taxCess) || 0
-    };
-    onUpdateStore({ ...store, taxSlabs: [...taxSlabs, created] });
+    if (editingTaxId) {
+      onUpdateStore({
+        ...store,
+        taxSlabs: taxSlabs.map(t =>
+          t.id === editingTaxId
+            ? { ...t, name: taxName.trim(), cgst: Number(taxCgst) || 0, sgst: Number(taxSgst) || 0, cess: Number(taxCess) || 0 }
+            : t
+        )
+      });
+      onNotify({ type: 'success', title: 'GST Tax Slab Updated', message: `${taxName.trim()} saved.` });
+      setEditingTaxId(null);
+    } else {
+      const created: AdminTaxSlab = {
+        id: `TAX-${Date.now()}`,
+        name: taxName.trim(),
+        cgst: Number(taxCgst) || 0,
+        sgst: Number(taxSgst) || 0,
+        cess: Number(taxCess) || 0
+      };
+      onUpdateStore({ ...store, taxSlabs: [...taxSlabs, created] });
+      onNotify({ type: 'success', title: 'GST Tax Slab Saved', message: `${created.name} added.` });
+    }
     setTaxName('');
-    onNotify({ type: 'success', title: 'GST Tax Slab Saved', message: `${created.name} added.` });
   };
 
   const notesTotal = Object.entries(denomCounts).reduce((sum, [val, cnt]) => sum + Number(val) * (cnt || 0), 0);
@@ -398,6 +445,30 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
                       >
                         <Barcode size={12} /> Label
                       </button>
+                      <button
+                        className="bb-btn-outline"
+                        style={{ padding: '4px 8px', fontSize: 11.5, color: '#B91C1C', borderColor: '#FCA5A5' }}
+                        title="Delete product"
+                        onClick={() => {
+                          const removeProd = () => {
+                            onUpdateStore({ ...store, products: store.products.filter(x => x.id !== p.id) });
+                            onNotify({ type: 'info', title: 'Product Removed', message: `${p.name} (#${p.code}) deleted from catalog.` });
+                          };
+                          if (onConfirm) {
+                            onConfirm({
+                              title: `Delete Product "${p.name}"?`,
+                              message: `Remove #${p.code} (${p.name}) from Master Catalog and Shop POS?`,
+                              confirmLabel: 'Delete Product',
+                              danger: true,
+                              onConfirm: removeProd
+                            });
+                          } else {
+                            removeProd();
+                          }
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -431,8 +502,22 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
               style={{ flex: 2, minWidth: 200, padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13 }}
             />
             <button type="submit" className="bb-btn-primary">
-              <Plus size={14} /> Add Category
+              <Plus size={14} /> {editingCatId ? 'Update Category' : 'Add Category'}
             </button>
+            {editingCatId && (
+              <button
+                type="button"
+                className="bb-btn-outline"
+                onClick={() => {
+                  setEditingCatId(null);
+                  setCatName('');
+                  setCatTamil('');
+                  setCatDesc('');
+                }}
+              >
+                Cancel
+              </button>
+            )}
           </form>
 
           <table className="bb-table">
@@ -445,31 +530,45 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
                   <td style={{ fontWeight: 700 }}>{c.code}</td>
                   <td style={{ fontWeight: 600 }}>{c.name}</td>
                   <td>{c.tamilName}</td>
-                  <td style={{ color: '#64748B' }}>{c.description}</td>
+                  <td style={{ color: 'var(--bb-text-muted)' }}>{c.description}</td>
                   <td>
-                    <button
-                      className="bb-btn-outline"
-                      style={{ padding: '4px 8px', color: '#B91C1C', borderColor: '#FCA5A5' }}
-                      onClick={() => {
-                        const removeCat = () => {
-                          onUpdateStore({ ...store, categories: categories.filter(x => x.id !== c.id) });
-                          onNotify({ type: 'info', title: 'Category Removed', message: `${c.name} (${c.code}) was removed.` });
-                        };
-                        if (onConfirm) {
-                          onConfirm({
-                            title: `Remove Category "${c.name}"?`,
-                            message: 'Products currently assigned to this category will keep their text label, but the category will no longer appear in dropdowns.',
-                            confirmLabel: 'Remove Category',
-                            danger: true,
-                            onConfirm: removeCat
-                          });
-                        } else {
-                          removeCat();
-                        }
-                      }}
-                    >
-                      <Trash2 size={12} /> Remove
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        className="bb-btn-outline"
+                        style={{ padding: '4px 8px', fontSize: 11.5 }}
+                        onClick={() => {
+                          setEditingCatId(c.id);
+                          setCatName(c.name);
+                          setCatTamil(c.tamilName);
+                          setCatDesc(c.description);
+                        }}
+                      >
+                        <Edit3 size={12} /> Edit
+                      </button>
+                      <button
+                        className="bb-btn-outline"
+                        style={{ padding: '4px 8px', fontSize: 11.5, color: '#B91C1C', borderColor: '#FCA5A5' }}
+                        onClick={() => {
+                          const removeCat = () => {
+                            onUpdateStore({ ...store, categories: categories.filter(x => x.id !== c.id) });
+                            onNotify({ type: 'info', title: 'Category Removed', message: `${c.name} (${c.code}) was removed.` });
+                          };
+                          if (onConfirm) {
+                            onConfirm({
+                              title: `Remove Category "${c.name}"?`,
+                              message: 'Products currently assigned to this category will keep their text label, but the category will no longer appear in dropdowns.',
+                              confirmLabel: 'Remove Category',
+                              danger: true,
+                              onConfirm: removeCat
+                            });
+                          } else {
+                            removeCat();
+                          }
+                        }}
+                      >
+                        <Trash2 size={12} /> Remove
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -503,13 +602,26 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
               {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
             </select>
             <button type="submit" className="bb-btn-primary">
-              <Plus size={14} /> Add Supplier
+              <Plus size={14} /> {editingSupId ? 'Update Supplier' : 'Add Supplier'}
             </button>
+            {editingSupId && (
+              <button
+                type="button"
+                className="bb-btn-outline"
+                onClick={() => {
+                  setEditingSupId(null);
+                  setSupName('');
+                  setSupPhone('');
+                }}
+              >
+                Cancel
+              </button>
+            )}
           </form>
 
           <table className="bb-table">
             <thead>
-              <tr><th>Code</th><th>Supplier Name</th><th>Phone</th><th>Supply Category</th><th>Purchased</th><th>Balance Due</th></tr>
+              <tr><th>Code</th><th>Supplier Name</th><th>Phone</th><th>Supply Category</th><th>Purchased</th><th>Balance Due</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {store.vendors.map(v => (
@@ -520,6 +632,47 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
                   <td>{v.category}</td>
                   <td>{formatINR(v.totalPurchased)}</td>
                   <td style={{ fontWeight: 700, color: v.balanceDue > 0 ? '#B91C1C' : '#15803D' }}>{formatINR(v.balanceDue)}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        className="bb-btn-outline"
+                        style={{ padding: '4px 8px', fontSize: 11.5 }}
+                        onClick={() => {
+                          setEditingSupId(v.id);
+                          setSupName(v.name);
+                          setSupPhone(v.phone);
+                          setSupCategory(v.category);
+                        }}
+                      >
+                        <Edit3 size={12} /> Edit
+                      </button>
+                      <button
+                        className="bb-btn-outline"
+                        style={{ padding: '4px 8px', fontSize: 11.5, color: '#B91C1C', borderColor: '#FCA5A5' }}
+                        onClick={() => {
+                          const removeSup = () => {
+                            onUpdateStore({ ...store, vendors: store.vendors.filter(x => x.id !== v.id) });
+                            onNotify({ type: 'info', title: 'Supplier Removed', message: `${v.name} removed.` });
+                          };
+                          if (onConfirm) {
+                            onConfirm({
+                              title: `Delete Supplier "${v.name}"?`,
+                              message: v.balanceDue > 0
+                                ? `Warning: ${v.name} still has ${formatINR(v.balanceDue)} balance due. Delete anyway?`
+                                : `Remove ${v.name} (${v.code}) from Supplier Master?`,
+                              confirmLabel: 'Delete Supplier',
+                              danger: true,
+                              onConfirm: removeSup
+                            });
+                          } else {
+                            removeSup();
+                          }
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -542,13 +695,25 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
             <input type="number" step="0.5" value={taxSgst} onChange={e => setTaxSgst(e.target.value)} placeholder="SGST %" style={{ width: 90, padding: 8, borderRadius: 8, border: '1px solid #CBD5E1' }} />
             <input type="number" step="0.5" value={taxCess} onChange={e => setTaxCess(e.target.value)} placeholder="Cess %" style={{ width: 90, padding: 8, borderRadius: 8, border: '1px solid #CBD5E1' }} />
             <button type="submit" className="bb-btn-primary">
-              <Plus size={14} /> Add Tax Slab
+              <Plus size={14} /> {editingTaxId ? 'Update Tax Slab' : 'Add Tax Slab'}
             </button>
+            {editingTaxId && (
+              <button
+                type="button"
+                className="bb-btn-outline"
+                onClick={() => {
+                  setEditingTaxId(null);
+                  setTaxName('');
+                }}
+              >
+                Cancel
+              </button>
+            )}
           </form>
 
           <table className="bb-table">
             <thead>
-              <tr><th>Tax Slab</th><th>CGST %</th><th>SGST %</th><th>Total GST %</th><th>Cess %</th></tr>
+              <tr><th>Tax Slab</th><th>CGST %</th><th>SGST %</th><th>Total GST %</th><th>Cess %</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {taxSlabs.map(t => (
@@ -558,6 +723,46 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
                   <td>{t.sgst}%</td>
                   <td style={{ fontWeight: 700, color: 'var(--bb-accent-link)' }}>{t.cgst + t.sgst}%</td>
                   <td>{t.cess}%</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        className="bb-btn-outline"
+                        style={{ padding: '4px 8px', fontSize: 11.5 }}
+                        onClick={() => {
+                          setEditingTaxId(t.id);
+                          setTaxName(t.name);
+                          setTaxCgst(String(t.cgst));
+                          setTaxSgst(String(t.sgst));
+                          setTaxCess(String(t.cess));
+                        }}
+                      >
+                        <Edit3 size={12} /> Edit
+                      </button>
+                      <button
+                        className="bb-btn-outline"
+                        style={{ padding: '4px 8px', fontSize: 11.5, color: '#B91C1C', borderColor: '#FCA5A5' }}
+                        onClick={() => {
+                          const removeTax = () => {
+                            onUpdateStore({ ...store, taxSlabs: taxSlabs.filter(x => x.id !== t.id) });
+                            onNotify({ type: 'info', title: 'GST Slab Deleted', message: `${t.name} removed.` });
+                          };
+                          if (onConfirm) {
+                            onConfirm({
+                              title: `Delete Tax Slab "${t.name}"?`,
+                              message: 'Are you sure you want to remove this GST tax slab?',
+                              confirmLabel: 'Delete Slab',
+                              danger: true,
+                              onConfirm: removeTax
+                            });
+                          } else {
+                            removeTax();
+                          }
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -716,6 +921,14 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600 }}>Low Stock Threshold</label>
                 <input type="number" value={pLowThresh} onChange={e => setPLowThresh(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600 }}>GST Tax Slab</label>
+                <select value={pTaxSlabId} onChange={e => setPTaxSlabId(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }}>
+                  {taxSlabs.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>

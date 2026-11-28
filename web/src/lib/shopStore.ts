@@ -39,6 +39,7 @@ export interface AdminProduct {
   centralStock: number;
   shopStocks: Record<string, number>; // shopId -> qty
   barcode: string;
+  taxSlabId?: string;
   lastSoldDaysAgo: number;
 }
 
@@ -323,6 +324,7 @@ function buildInitialSeedData(): AdminStoreData {
       centralStock: p.unit === 'Nos' ? 120 : 100,
       shopStocks: { 'shop-1': stockOverride },
       barcode: p.barcode,
+      taxSlabId: p.taxSlabId || 'TAX-5',
       lastSoldDaysAgo: idx === 10 ? 45 : idx % 5
     };
   });
@@ -353,6 +355,7 @@ function buildInitialSeedData(): AdminStoreData {
     centralStock: 300,
     shopStocks: { 'shop-1': 100 },
     barcode: '890100000501',
+    taxSlabId: 'TAX-0',
     lastSoldDaysAgo: 0
   });
 
@@ -1228,7 +1231,7 @@ export function getSharedProductsForPos(): Product[] {
       unit: p.unit,
       isDecimal: seed ? seed.isDecimal : p.unit.toLowerCase() === 'kg',
       isWeighingMachine: seed ? seed.isWeighingMachine : p.unit.toLowerCase() === 'kg',
-      taxSlabId: seed ? seed.taxSlabId : 'TAX-5',
+      taxSlabId: p.taxSlabId || (seed ? seed.taxSlabId : 'TAX-5'),
       barcode: p.barcode || `89010000${p.code}`,
       currentStock: shopQty
     };

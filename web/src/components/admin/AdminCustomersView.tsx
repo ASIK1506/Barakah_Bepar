@@ -12,7 +12,8 @@ import {
   Search,
   X,
   CreditCard,
-  ShieldAlert
+  ShieldAlert,
+  Edit3
 } from 'lucide-react';
 import {
   AdminStoreData,
@@ -71,12 +72,15 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
   // Customer Khata / Ledger Modal
   const [khataCust, setKhataCust] = useState<AdminCustomer | null>(null);
 
-  // Add Customer Modal (Phone-first deduplication guard)
+  // Add / Edit Customer Modal (Phone-first deduplication guard)
   const [addCustOpen, setAddCustOpen] = useState(false);
+  const [editingCustCode, setEditingCustCode] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
+  const [newTamilName, setNewTamilName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newType, setNewType] = useState<'Retail' | 'Wholesale'>('Retail');
   const [newLimit, setNewLimit] = useState('5000');
+  const [newPoints, setNewPoints] = useState('0');
   const [addCustErr, setAddCustErr] = useState('');
 
   // Quick New Udhar Credit Bill Modal (Skywalk Walk-in Guard & Partial split)
@@ -154,6 +158,30 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
     setCollectCust(null);
   };
 
+  const openNewCustomerModal = () => {
+    setEditingCustCode(null);
+    setNewName('');
+    setNewTamilName('');
+    setNewPhone('');
+    setNewType('Retail');
+    setNewLimit('5000');
+    setNewPoints('0');
+    setAddCustErr('');
+    setAddCustOpen(true);
+  };
+
+  const openEditCustomerModal = (c: AdminCustomer) => {
+    setEditingCustCode(c.code);
+    setNewName(c.name);
+    setNewTamilName(c.tamilName || '');
+    setNewPhone(c.phone1);
+    setNewType(c.customerType || 'Retail');
+    setNewLimit(String(c.creditLimit || 5000));
+    setNewPoints(String(c.points || 0));
+    setAddCustErr('');
+    setAddCustOpen(true);
+  };
+
   const handleAddCustomer = (e: React.FormEvent) => {
     e.preventDefault();
     setAddCustErr('');
@@ -162,26 +190,50 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
       setAddCustErr('Customer Name and valid 10-digit Phone Number are required (Phone-First Udhar rule).');
       return;
     }
-    if (store.customers.some(c => c.phone1.replace(/\D/g, '') === cleanPhone)) {
-      setAddCustErr('A customer with this phone number already exists!');
+    if (store.customers.some(c => c.code !== editingCustCode && c.phone1.replace(/\D/g, '') === cleanPhone)) {
+      setAddCustErr('Another customer with this phone number already exists!');
       return;
     }
-    const nextCode = `C${store.customers.length + 13}`;
-    const created: AdminCustomer = {
-      code: nextCode,
-      name: newName.trim(),
-      phone1: cleanPhone,
-      balance: 0,
-      points: 0,
-      previousPurchase: new Date().toISOString().slice(0, 10),
-      customerType: newType,
-      creditLimit: Number(newLimit) || 5000,
-      totalOrders: 0,
-      totalSpent: 0
-    };
-    onUpdateStore({ ...store, customers: [created, ...store.customers] });
+    if (editingCustCode) {
+      onUpdateStore({
+        ...store,
+        customers: store.customers.map(c =>
+          c.code === editingCustCode
+            ? {
+                ...c,
+                name: newName.trim(),
+                tamilName: newTamilName.trim() || undefined,
+                phone1: cleanPhone,
+                customerType: newType,
+                creditLimit: Number(newLimit) || 5000,
+                points: Math.max(0, Number(newPoints) || 0)
+              }
+            : c
+        )
+      });
+      onNotify?.({ type: 'success', title: 'Customer Updated', message: `${newName.trim()} (${editingCustCode}) saved.` });
+    } else {
+      const nextCode = `C${store.customers.length + 13}`;
+      const created: AdminCustomer = {
+        code: nextCode,
+        name: newName.trim(),
+        tamilName: newTamilName.trim() || undefined,
+        phone1: cleanPhone,
+        balance: 0,
+        points: Math.max(0, Number(newPoints) || 0),
+        previousPurchase: new Date().toISOString().slice(0, 10),
+        customerType: newType,
+        creditLimit: Number(newLimit) || 5000,
+        totalOrders: 0,
+        totalSpent: 0
+      };
+      onUpdateStore({ ...store, customers: [created, ...store.customers] });
+      onNotify?.({ type: 'success', title: 'Customer Added', message: `${created.name} (${created.code}) registered.` });
+    }
     setNewName('');
+    setNewTamilName('');
     setNewPhone('');
+    setEditingCustCode(null);
     setAddCustOpen(false);
   };
 
@@ -353,7 +405,7 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
             <button className="bb-btn-outline" onClick={() => setNewUdharOpen(true)}>
               <FileText size={14} /> + New Udhar Bill
             </button>
-            <button className="bb-btn-primary" onClick={() => setAddCustOpen(true)}>
+            <button className="bb-btn-primary" onClick={openNewCustomerModal}>
               <Plus size={14} /> Add Customer
             </button>
           </div>
@@ -476,7 +528,7 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
                         <span style={{ fontSize: 11, color: '#64748B', fontWeight: 500 }}>({c.code})</span>
                       </div>
                       <div style={{ fontSize: 12, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                        <Phone size={11} /> {c.phone1} {c.tamilName ? `· ${c.tamilName}` : ''}
+                        <Phone size={11} /> {c.phone1} {c.tamilName ? `· ${c.tamilName}` : ''} · {c.points || 0} pts
                       </div>
                     </td>
                     <td>
@@ -534,6 +586,14 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
                           onClick={() => setKhataCust(c)}
                         >
                           <FileText size={12} /> Khata
+                        </button>
+                        <button
+                          className="bb-btn-outline"
+                          style={{ padding: '5px 9px', fontSize: 11.5 }}
+                          onClick={() => openEditCustomerModal(c)}
+                          title="Edit Customer Details & Credit Limit"
+                        >
+                          <Edit3 size={12} /> Edit
                         </button>
                         {c.balance > 0 && (
                           <button
@@ -828,21 +888,29 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
         >
           <div className="bb-card" style={{ width: 'min(420px, 92vw)' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700 }}>Add Customer Account</h3>
+              <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700 }}>
+                {editingCustCode ? `Edit Customer (${editingCustCode})` : 'Add Customer Account'}
+              </h3>
               <button onClick={() => setAddCustOpen(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>
                 <X size={18} />
               </button>
             </div>
             <form onSubmit={handleAddCustomer} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600 }}>Customer / Shop Name *</label>
-                <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Madurai Stores" style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600 }}>Customer / Shop Name *</label>
+                  <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Madurai Stores" style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600 }}>Tamil Name</label>
+                  <input value={newTamilName} onChange={e => setNewTamilName(e.target.value)} placeholder="தமிழ் பெயர்" style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+                </div>
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600 }}>Phone Number * (Unique Key)</label>
                 <input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="10-digit mobile" style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600 }}>Account Type</label>
                   <select value={newType} onChange={e => setNewType(e.target.value as 'Retail' | 'Wholesale')} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }}>
@@ -854,11 +922,15 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
                   <label style={{ fontSize: 12, fontWeight: 600 }}>Credit Limit (₹)</label>
                   <input type="number" value={newLimit} onChange={e => setNewLimit(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
                 </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600 }}>Loyalty Points</label>
+                  <input type="number" min="0" value={newPoints} onChange={e => setNewPoints(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginTop: 4 }} />
+                </div>
               </div>
               {addCustErr && <div style={{ color: '#B91C1C', fontSize: 12, fontWeight: 600 }}>{addCustErr}</div>}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                 <button type="button" className="bb-btn-outline" onClick={() => setAddCustOpen(false)}>Cancel</button>
-                <button type="submit" className="bb-btn-primary">Save Customer</button>
+                <button type="submit" className="bb-btn-primary">{editingCustCode ? 'Update Customer' : 'Save Customer'}</button>
               </div>
             </form>
           </div>
