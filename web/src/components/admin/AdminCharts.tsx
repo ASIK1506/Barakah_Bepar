@@ -487,8 +487,12 @@ export const AccuracyGaugeChart: React.FC<{ percent: number }> = ({ percent }) =
         />
         {/* Needle */}
         <g
-          transform={`rotate(${angle} ${cx} ${cy})`}
-          style={{ transition: 'transform 2.1s cubic-bezier(0.22, 1, 0.36, 1)' }}
+          style={{
+            transform: `rotate(${angle}deg)`,
+            transformOrigin: `${cx}px ${cy}px`,
+            transformBox: 'view-box',
+            transition: 'transform 2.1s cubic-bezier(0.22, 1, 0.36, 1)'
+          }}
         >
           <line x1={cx} y1={cy} x2={cx} y2={cy - 54} stroke="var(--bb-text-primary)" strokeWidth="3" strokeLinecap="round" />
         </g>
