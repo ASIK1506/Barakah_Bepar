@@ -434,17 +434,7 @@ export const AdminCustomersView: React.FC<AdminCustomersViewProps> = ({
                 <button
                   key={f.key}
                   onClick={() => setFilterChip(f.key as typeof filterChip)}
-                  style={{
-                    padding: '5px 11px',
-                    borderRadius: 999,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    border: '1px solid',
-                    borderColor: filterChip === f.key ? '#1F4E63' : '#CBD5E1',
-                    background: filterChip === f.key ? '#1F4E63' : '#FFFFFF',
-                    color: filterChip === f.key ? '#FFFFFF' : '#475569'
-                  }}
+                  className={`bb-filter-chip ${filterChip === f.key ? 'active' : ''}`}
                 >
                   {f.label}
                 </button>

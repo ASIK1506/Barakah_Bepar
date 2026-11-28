@@ -742,7 +742,7 @@ export const AdminInventoryView: React.FC<{
                 </td>
                 <td>{p.category}</td>
                 <td>{p.boxSize > 1 ? `1 Box/Bag = ${p.boxSize} ${p.unit}` : `Loose (${p.unit})`}</td>
-                <td style={{ fontWeight: 700, color: displayQty <= p.lowStockThreshold ? '#B91C1C' : '#1E293B' }}>
+                <td style={{ fontWeight: 700, color: displayQty <= p.lowStockThreshold ? '#B91C1C' : 'var(--bb-text-primary)' }}>
                   {displayQty} {p.unit}
                   {displayQty <= p.lowStockThreshold && (
                     <span style={{ marginLeft: 6, fontSize: 10.5, background: '#FEE2E2', color: '#B91C1C', padding: '1px 6px', borderRadius: 99 }}>
@@ -1018,8 +1018,40 @@ export const AdminOrdersView: React.FC<{
         amount: bill.netAmount,
         reason: 'Sales Return recorded from HQ Orders'
       };
+      // Restore sold quantities back into shop & total inventory when line items exist
+      const nextProducts =
+        bill.items && bill.items.length > 0
+          ? store.products.map(p => {
+              const returnedQty = bill.items!
+                .filter(it => it.productId === p.id || it.code === p.code)
+                .reduce((s, it) => s + it.qty, 0);
+              if (returnedQty <= 0) return p;
+              const prevShopQty = p.shopStocks[bill.shopId] ?? p.currentStock;
+              return {
+                ...p,
+                currentStock: Number((p.currentStock + returnedQty).toFixed(2)),
+                shopStocks: {
+                  ...p.shopStocks,
+                  [bill.shopId]: Number((prevShopQty + returnedQty).toFixed(2))
+                }
+              };
+            })
+          : store.products;
+
+      // Also adjust customer pending balance if bill had unpaid Udhaar
+      const nextCustomers =
+        bill.pendingAmount > 0 && bill.customerCode && bill.customerCode !== 'F1'
+          ? store.customers.map(c =>
+              c.code === bill.customerCode
+                ? { ...c, balance: Number(Math.max(0, c.balance - bill.pendingAmount).toFixed(2)) }
+                : c
+            )
+          : store.customers;
+
       onUpdateStore({
         ...store,
+        products: nextProducts,
+        customers: nextCustomers,
         bills: store.bills.map(b =>
           b.id === bill.id ? { ...b, status: 'Cancelled', pendingAmount: 0 } : b
         ),
@@ -1028,7 +1060,7 @@ export const AdminOrdersView: React.FC<{
       onNotify?.({
         type: 'warning',
         title: `Sales Return ${retEntry.returnNo} Processed`,
-        message: `Bill ${bill.billNo} (${formatINR(bill.netAmount)}) marked returned & archived.`
+        message: `Bill ${bill.billNo} (${formatINR(bill.netAmount)}) returned, Udhaar cleared & stock restored.`
       });
     };
 
@@ -1076,12 +1108,11 @@ export const AdminOrdersView: React.FC<{
 
         {matchedBill && (
           <div
+            className={matchedBill.pendingAmount > 0 ? 'bb-udhaar-row' : 'bb-highlight-green'}
             style={{
               marginTop: 12,
               padding: '12px 14px',
               borderRadius: 10,
-              background: matchedBill.pendingAmount > 0 ? '#FFFBEB' : '#F0FDF4',
-              border: `1px solid ${matchedBill.pendingAmount > 0 ? '#FCD34D' : '#86EFAC'}`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -1332,7 +1363,7 @@ export const AdminOrdersView: React.FC<{
                 borderRadius: '50%',
                 border: 'none',
                 background: page === num ? '#1F4E63' : 'transparent',
-                color: page === num ? '#FFFFFF' : '#475569',
+                color: page === num ? '#FFFFFF' : 'var(--bb-text-secondary)',
                 fontWeight: 700,
                 cursor: 'pointer'
               }}
@@ -1392,11 +1423,20 @@ export const AdminOrdersView: React.FC<{
               </div>
             </div>
 
-            <div style={{ border: '1px solid #CBD5E1', padding: printMode === 'Thermal' ? 12 : 22, borderRadius: 6 }}>
+            <div style={{ border: '1px solid #CBD5E1', padding: printMode === 'Thermal' ? 12 : 22, borderRadius: 6, background: '#FFFFFF', color: '#0F172A' }}>
               <div style={{ textAlign: 'center', borderBottom: '1px dashed #94A3B8', paddingBottom: 10, marginBottom: 12 }}>
-                <div style={{ fontSize: printMode === 'Thermal' ? 16 : 20, fontWeight: 800 }}>BARAKAH BEPAAR — {printBill.shopName}</div>
-                <div style={{ fontSize: 11.5, color: '#475569' }}>
-                  {printMode === 'A4' ? 'TAX INVOICE (GST VERSION) · GSTIN: 33AAACB1234F1Z5' : 'CASH / CREDIT BILL'}
+                <div style={{ fontSize: printMode === 'Thermal' ? 16 : 20, fontWeight: 800 }}>
+                  {(store.company?.name || 'BARAKAH BEPAAR').toUpperCase()} — {printBill.shopName}
+                </div>
+                {store.company?.address && (
+                  <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
+                    {store.company.address} {store.company.phone ? `· Ph: ${store.company.phone}` : ''}
+                  </div>
+                )}
+                <div style={{ fontSize: 11.5, color: '#475569', marginTop: 2 }}>
+                  {printMode === 'A4'
+                    ? `TAX INVOICE (GST VERSION) · GSTIN: ${store.company?.gstin || '33AAACB1234F1Z5'}`
+                    : 'CASH / CREDIT BILL'}
                 </div>
               </div>
 
@@ -1459,7 +1499,7 @@ export const AdminOrdersView: React.FC<{
                 )}
               </div>
               <div style={{ textAlign: 'center', fontSize: 11, color: '#64748B', marginTop: 14 }}>
-                Thank you for shopping at {printBill.shopName} · நன்றி! மீண்டும் வருக!
+                {store.company?.receiptFooter || `Thank you for shopping at ${printBill.shopName} · நன்றி! மீண்டும் வருக!`}
               </div>
             </div>
           </div>
@@ -1518,11 +1558,16 @@ export const AdminPurchaseView: React.FC<{
 
     const updatedProducts = store.products.map(p => {
       if (p.id !== prod.id) return p;
+      const isDirectShop = targetLoc !== 'Central';
+      const prevShopStock = isDirectShop ? (p.shopStocks[targetLoc] ?? p.currentStock) : 0;
       return {
         ...p,
         purchasePrice: Number(costPerUnit) || p.purchasePrice,
-        centralStock: targetLoc === 'Central' ? p.centralStock + totalUnits : p.centralStock,
-        currentStock: targetLoc !== 'Central' ? p.currentStock + totalUnits : p.currentStock
+        centralStock: !isDirectShop ? p.centralStock + totalUnits : p.centralStock,
+        currentStock: isDirectShop ? p.currentStock + totalUnits : p.currentStock,
+        shopStocks: isDirectShop
+          ? { ...p.shopStocks, [targetLoc]: prevShopStock + totalUnits }
+          : p.shopStocks
       };
     });
 
@@ -1771,6 +1816,43 @@ export const AdminPurchaseView: React.FC<{
         </table>
       </div>
 
+      {/* Supplier Payment Vouchers Audit Log */}
+      <div className="bb-card">
+        <h3 style={{ margin: '0 0 12px 0', fontSize: 15.5, fontWeight: 700 }}>Supplier Payment Vouchers Log</h3>
+        {(store.vendorPayments || []).length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--bb-text-muted)' }}>No supplier payment vouchers recorded yet.</div>
+        ) : (
+          <table className="bb-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Supplier</th>
+                <th>Method</th>
+                <th>Amount Paid</th>
+                <th>Balance After</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(store.vendorPayments || []).map(vp => (
+                <tr key={vp.id}>
+                  <td>{vp.date}</td>
+                  <td style={{ fontWeight: 600 }}>{vp.vendorName}</td>
+                  <td>
+                    <code style={{ background: 'var(--bb-surface-soft)', padding: '2px 7px', borderRadius: 4, fontSize: 11.5 }}>
+                      {vp.method}
+                    </code>
+                  </td>
+                  <td style={{ fontWeight: 700, color: '#15803D' }}>{formatINR(vp.amount)}</td>
+                  <td style={{ fontWeight: 600 }}>{formatINR(vp.balanceAfter)}</td>
+                  <td style={{ color: 'var(--bb-text-muted)', fontSize: 12 }}>{vp.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
       {/* Purchase Return Entry & Log */}
       <div className="bb-card">
         <h3 style={{ margin: '0 0 12px 0', fontSize: 15.5, fontWeight: 700 }}>Purchase Returns to Supplier</h3>
@@ -1975,6 +2057,20 @@ export const AdminReportingView: React.FC<{ store: AdminStoreData }> = ({ store 
   ];
   const maxHourlyBills = Math.max(...hourlyBuckets.map(h => h.bills), 1);
 
+  // Today's Day-End Closing / Z-Report Metrics
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayBills = activeBills.filter(b => b.date === todayIso);
+  const todayTotalSales = todayBills.reduce((s, b) => s + b.netAmount, 0);
+  const todayCashIn = todayBills.filter(b => b.paymentMode === 'CASH').reduce((s, b) => s + b.paidAmount, 0);
+  const todayUpiIn = todayBills.filter(b => b.paymentMode === 'UPI').reduce((s, b) => s + b.paidAmount, 0);
+  const todayCardIn = todayBills.filter(b => b.paymentMode === 'CARD').reduce((s, b) => s + b.paidAmount, 0);
+  const todayCreditPending = todayBills.reduce((s, b) => s + b.pendingAmount, 0);
+  const todayExpensesTotal = store.expenses
+    .filter(e => e.date === todayIso && (selectedShopId === 'all' || e.shopId === selectedShopId))
+    .reduce((s, e) => s + e.amount, 0);
+  const latestTally = (store.denominationLogs || [])[0];
+  const expectedNetCash = todayCashIn - todayExpensesTotal + (latestTally ? latestTally.paidIn - latestTally.paidOut : 0);
+
   // Staff billing performance
   const staffMap: Record<string, { bills: number; total: number }> = {};
   activeBills.forEach(b => {
@@ -2067,10 +2163,10 @@ export const AdminReportingView: React.FC<{ store: AdminStoreData }> = ({ store 
               </span>
             </div>
             {[
-              ['Gross Sales', formatINR(grossSales), '#1E293B'],
+              ['Gross Sales', formatINR(grossSales), 'var(--bb-text-primary)'],
               ['(-) Discounts', `-${formatINR(discounts)}`, '#B45309'],
-              ['Net Revenue', formatINR(netSales), '#1F4E63'],
-              ['(-) Cost of Goods (COGS)', `-${formatINR(cogs)}`, '#64748B'],
+              ['Net Revenue', formatINR(netSales), 'var(--bb-accent-link)'],
+              ['(-) Cost of Goods (COGS)', `-${formatINR(cogs)}`, 'var(--bb-text-muted)'],
               ['Gross Profit', formatINR(grossProfit), '#15803D'],
               ['(-) Operating Expenses', `-${formatINR(totalExpenses)}`, '#DC2626'],
               ['Net Profit', formatINR(netProfit), netProfit >= 0 ? '#15803D' : '#DC2626']
@@ -2081,7 +2177,7 @@ export const AdminReportingView: React.FC<{ store: AdminStoreData }> = ({ store 
                   display: 'flex',
                   justifyContent: 'space-between',
                   padding: '6px 0',
-                  borderTop: idx === 6 ? '2px solid #CBD5E1' : '1px dashed #E2E8F0',
+                  borderTop: idx === 6 ? '2px solid var(--bb-border-soft)' : '1px dashed var(--bb-border-soft)',
                   fontWeight: idx === 6 || idx === 4 ? 700 : 500,
                   fontSize: 13
                 }}
@@ -2136,6 +2232,99 @@ export const AdminReportingView: React.FC<{ store: AdminStoreData }> = ({ store 
             </table>
           </div>
         </div>
+      </div>
+
+      {/* Printable Consolidated Day-End Closing / Z-Report */}
+      <div className="bb-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 15.5, fontWeight: 700 }}>
+              Consolidated Day-End Closing Report (Z-Report · {todayIso})
+            </h3>
+            <div style={{ fontSize: 12, color: 'var(--bb-text-muted)' }}>
+              {store.company?.name || 'Deen Stores'} · Cash, UPI, Card, Credit, Expenses & Drawer Reconciliation
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }} className="bb-no-print">
+            <button
+              className="bb-btn-outline"
+              onClick={() => {
+                const text = encodeURIComponent(buildDailyClosingWhatsAppMessage(store));
+                const ph = (store.ownerWhatsapp || '').replace(/\D/g, '');
+                window.open(ph ? `https://wa.me/91${ph}?text=${text}` : `https://wa.me/?text=${text}`, '_blank');
+              }}
+            >
+              <MessageCircle size={14} color="#16A34A" /> Send Z-Report on WhatsApp
+            </button>
+            <button className="bb-btn-primary" onClick={() => window.print()}>
+              <Printer size={14} /> Print Day-End Z-Report
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
+          <div className="bb-kpi-tile">
+            <div>
+              <div style={{ fontSize: 11.5, color: 'var(--bb-text-muted)' }}>Today Sales ({todayBills.length} bills)</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--bb-accent-link)' }}>{formatINR(todayTotalSales)}</div>
+            </div>
+          </div>
+          <div className="bb-kpi-tile">
+            <div>
+              <div style={{ fontSize: 11.5, color: 'var(--bb-text-muted)' }}>Cash Collected</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#15803D' }}>{formatINR(todayCashIn)}</div>
+            </div>
+          </div>
+          <div className="bb-kpi-tile">
+            <div>
+              <div style={{ fontSize: 11.5, color: 'var(--bb-text-muted)' }}>UPI + Card Digital</div>
+              <div style={{ fontSize: 17, fontWeight: 800 }}>{formatINR(todayUpiIn + todayCardIn)}</div>
+            </div>
+          </div>
+          <div className="bb-kpi-tile">
+            <div>
+              <div style={{ fontSize: 11.5, color: 'var(--bb-text-muted)' }}>New Credit (Udhaar)</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#B45309' }}>{formatINR(todayCreditPending)}</div>
+            </div>
+          </div>
+          <div className="bb-kpi-tile">
+            <div>
+              <div style={{ fontSize: 11.5, color: 'var(--bb-text-muted)' }}>Today Cash Outflow</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#DC2626' }}>{formatINR(todayExpensesTotal)}</div>
+            </div>
+          </div>
+          <div className="bb-kpi-tile">
+            <div>
+              <div style={{ fontSize: 11.5, color: 'var(--bb-text-muted)' }}>Net Expected Cash</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#15803D' }}>{formatINR(expectedNetCash)}</div>
+            </div>
+          </div>
+        </div>
+
+        {latestTally && (
+          <div
+            className="bb-highlight-teal"
+            style={{
+              marginTop: 12,
+              padding: '10px 14px',
+              borderRadius: 10,
+              display: 'flex',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 10,
+              fontSize: 12.5
+            }}
+          >
+            <div>
+              <strong>Last Cash Drawer Denomination ({latestTally.date}):</strong> Notes Counted{' '}
+              <strong>{formatINR(latestTally.notesTotal)}</strong> · Paid In +{formatINR(latestTally.paidIn)} · Paid Out -
+              {formatINR(latestTally.paidOut)}
+            </div>
+            <div style={{ fontWeight: 800, color: 'var(--bb-accent-link)' }}>
+              Verified Closing Cash: {formatINR(latestTally.closingNet)}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Top 10 Profit by Product & Best-Selling Shop per Product */}

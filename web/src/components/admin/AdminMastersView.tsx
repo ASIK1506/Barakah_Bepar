@@ -606,7 +606,7 @@ export const AdminMastersView: React.FC<AdminMastersViewProps> = ({
               style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #CBD5E1', marginBottom: 12, fontSize: 12.5 }}
             />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#E6F4F1', padding: 12, borderRadius: 10 }}>
+            <div className="bb-highlight-teal" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 10 }}>
               <div>
                 <div style={{ fontSize: 11.5, color: 'var(--bb-text-secondary)' }}>Drawer Cash: {formatINR(notesTotal)}</div>
                 <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--bb-accent-link)' }}>Net Closing: {formatINR(netCashClosing)}</div>

@@ -579,6 +579,54 @@
   color: #FDBA74;
 }
 
+.bb-highlight-teal {
+  background: #E6F4F1;
+  border: 1px solid rgba(31, 78, 99, 0.16);
+}
+
+.bb-admin-root.dark-mode .bb-highlight-teal {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.bb-highlight-green {
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+}
+
+.bb-admin-root.dark-mode .bb-highlight-green {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.bb-filter-chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--bb-border-soft);
+  background: #FFFFFF;
+  color: var(--bb-text-secondary);
+  transition: all 0.15s ease;
+}
+
+.bb-admin-root.dark-mode .bb-filter-chip {
+  background: #0F172A;
+}
+
+.bb-filter-chip.active {
+  border-color: #1F4E63;
+  background: #1F4E63;
+  color: #FFFFFF;
+}
+
+.bb-admin-root.dark-mode .bb-filter-chip.active {
+  border-color: #38BDF8;
+  background: #0284C7;
+  color: #FFFFFF;
+}
+
 /* 6. Slide-Over Alert Drawer (Skywalk StockAlertDrawer style) */
 .bb-drawer-backdrop {
   position: fixed;
