@@ -673,7 +673,7 @@ export const AdminInventoryView: React.FC<{
             <div style={{ textAlign: 'center', fontSize: 24, fontWeight: 700 }}>{utilPct}%</div>
             <div style={{ textAlign: 'center', fontSize: 12.5, color: 'var(--bb-text-muted)', marginBottom: 12 }}>Utilization</div>
             <div style={{ height: 7, background: 'var(--bb-surface-track)', borderRadius: 99, overflow: 'hidden' }}>
-              <div style={{ width: `${utilPct}%`, height: '100%', background: '#5B7B8B' }} />
+              <div className="bb-bar-grow" style={{ width: `${utilPct}%`, height: '100%', background: '#5B7B8B' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--bb-text-muted)', marginTop: 6 }}>
               <span>0%</span>
@@ -2235,7 +2235,7 @@ export const AdminReportingView: React.FC<{ store: AdminStoreData }> = ({ store 
                   <div key={h.hour} style={{ display: 'grid', gridTemplateColumns: '76px 1fr 56px', alignItems: 'center', gap: 8, fontSize: 12 }}>
                     <span style={{ fontWeight: 600, color: 'var(--bb-text-secondary)' }}>{h.hour}</span>
                     <div style={{ height: 10, background: 'var(--bb-surface-soft)', borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: pct > 80 ? '#1F4E63' : '#5B7B8B', borderRadius: 99 }} />
+                      <div className="bb-bar-grow" style={{ width: `${pct}%`, height: '100%', background: pct > 80 ? '#1F4E63' : '#5B7B8B', borderRadius: 99 }} />
                     </div>
                     <span style={{ textAlign: 'right', fontWeight: 700 }}>{h.bills} bills</span>
                   </div>

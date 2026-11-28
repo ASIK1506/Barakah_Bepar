@@ -357,6 +357,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </span>
                     <div style={{ height: 10, background: 'var(--bb-surface-track)', borderRadius: 99, overflow: 'hidden' }}>
                       <div
+                        className="bb-bar-grow"
                         style={{
                           width: `${widthPct}%`,
                           height: '100%',

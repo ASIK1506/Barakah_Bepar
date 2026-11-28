@@ -353,7 +353,7 @@ export const InsightsChart: React.FC<InsightsChartProps> = ({ bills, shops }) =>
                     radius={[6, 6, 0, 0]}
                     maxBarSize={38}
                     isAnimationActive={true}
-                    animationDuration={850}
+                    animationDuration={1900}
                     animationEasing="ease-out"
                   />
                 </BarChart>
@@ -431,7 +431,7 @@ export const InsightsChart: React.FC<InsightsChartProps> = ({ bills, shops }) =>
                     dot={{ r: 3.5, fill: 'var(--bb-accent-link)', strokeWidth: 0 }}
                     activeDot={{ r: 6, fill: 'var(--bb-accent-link)', stroke: '#FFFFFF', strokeWidth: 2 }}
                     isAnimationActive={true}
-                    animationDuration={950}
+                    animationDuration={2000}
                     animationEasing="ease-out"
                   />
                   <Line
@@ -444,7 +444,7 @@ export const InsightsChart: React.FC<InsightsChartProps> = ({ bills, shops }) =>
                     dot={{ r: 3.5, fill: '#16A34A', strokeWidth: 0 }}
                     activeDot={{ r: 6, fill: '#16A34A', stroke: '#FFFFFF', strokeWidth: 2 }}
                     isAnimationActive={true}
-                    animationDuration={1100}
+                    animationDuration={2300}
                     animationEasing="ease-out"
                   />
                 </AreaChart>

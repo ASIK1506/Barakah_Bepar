@@ -24,6 +24,28 @@ export const DonutChart: React.FC<{ slices: DonutSlice[]; size?: number }> = ({
   slices,
   size = 132
 }) => {
+  const [revealed, setRevealed] = useState(false);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) {
+      setRevealed(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          setRevealed(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   const total = slices.reduce((s, x) => s + x.value, 0) || 1;
   const cx = size / 2;
   const cy = size / 2;
@@ -35,7 +57,7 @@ export const DonutChart: React.FC<{ slices: DonutSlice[]; size?: number }> = ({
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg ref={svgRef} width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {slices.map((slice, idx) => {
           const pct = slice.value / total;
           const dashLen = pct * circumference;
@@ -57,9 +79,10 @@ export const DonutChart: React.FC<{ slices: DonutSlice[]; size?: number }> = ({
                 fill="none"
                 stroke={slice.color}
                 strokeWidth={strokeWidth}
-                strokeDasharray={`${Math.max(0, dashLen - gap)} ${circumference}`}
+                strokeDasharray={`${revealed ? Math.max(0, dashLen - gap) : 0} ${circumference}`}
                 strokeDashoffset={-currentOffset}
                 transform={`rotate(-90 ${cx} ${cy})`}
+                style={{ transition: `stroke-dasharray 1.8s cubic-bezier(0.22, 1, 0.36, 1) ${idx * 180}ms` }}
               />
               {pct >= 0.1 && (
                 <text
@@ -70,6 +93,7 @@ export const DonutChart: React.FC<{ slices: DonutSlice[]; size?: number }> = ({
                   fill={idx === 0 ? '#1E293B' : '#FFFFFF'}
                   fontSize="11"
                   fontWeight="700"
+                  style={{ opacity: revealed ? 1 : 0, transition: 'opacity 0.8s ease 0.9s' }}
                 >
                   {Math.round(pct * 100)}%
                 </text>
@@ -254,7 +278,7 @@ export const ExpenseProfitAreaChart: React.FC<{ data: ExpenseProfitPoint[] }> = 
                 dot={{ r: 3.5, fill: '#C26D4A', strokeWidth: 0 }}
                 activeDot={{ r: 6, fill: '#C26D4A', stroke: '#FFFFFF', strokeWidth: 2 }}
                 isAnimationActive={true}
-                animationDuration={1050}
+                animationDuration={2100}
                 animationEasing="ease-out"
               />
               <Area
@@ -267,7 +291,7 @@ export const ExpenseProfitAreaChart: React.FC<{ data: ExpenseProfitPoint[] }> = 
                 dot={{ r: 3.5, fill: '#2D6A4F', strokeWidth: 0 }}
                 activeDot={{ r: 6, fill: '#2D6A4F', stroke: '#FFFFFF', strokeWidth: 2 }}
                 isAnimationActive={true}
-                animationDuration={1200}
+                animationDuration={2400}
                 animationEasing="ease-out"
               />
             </AreaChart>
@@ -364,7 +388,7 @@ export const TurnoverSplineChart: React.FC<{ data: { label: string; value: numbe
         strokeWidth="2.8"
         strokeDasharray="900"
         strokeDashoffset={revealed ? 0 : 900}
-        style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1)' }}
+        style={{ transition: 'stroke-dashoffset 2.2s cubic-bezier(0.22, 1, 0.36, 1)' }}
       />
 
       {pts.map((pt, i) => (
@@ -376,7 +400,7 @@ export const TurnoverSplineChart: React.FC<{ data: { label: string; value: numbe
             fill="#FFFFFF"
             stroke="#3D6B5E"
             strokeWidth="2.5"
-            style={{ transition: `r 0.35s ease ${i * 75}ms` }}
+            style={{ transition: `r 0.55s ease ${i * 220}ms` }}
           />
           <text x={pt.x} y={height - 6} textAnchor="middle" fontSize="11" fill="var(--bb-text-secondary)">
             {data[i].label}
@@ -464,7 +488,7 @@ export const AccuracyGaugeChart: React.FC<{ percent: number }> = ({ percent }) =
         {/* Needle */}
         <g
           transform={`rotate(${angle} ${cx} ${cy})`}
-          style={{ transition: 'transform 0.95s cubic-bezier(0.22, 1, 0.36, 1)' }}
+          style={{ transition: 'transform 2.1s cubic-bezier(0.22, 1, 0.36, 1)' }}
         >
           <line x1={cx} y1={cy} x2={cx} y2={cy - 54} stroke="var(--bb-text-primary)" strokeWidth="3" strokeLinecap="round" />
         </g>

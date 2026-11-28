@@ -96,7 +96,7 @@ export const AdminToastViewport: React.FC<{
               display: 'flex',
               flexDirection: 'column',
               gap: 8,
-              animation: 'bbSlideIn 0.18s ease-out'
+              animation: 'bbSlideIn 0.36s cubic-bezier(0.22, 1, 0.36, 1)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
